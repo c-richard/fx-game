@@ -1,25 +1,25 @@
 import { Server } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
+import { Room } from "./room";
 
-const rooms: any = {};
+const rooms: Record<string, Room> = {};
 
 const io = new Server({
   cors: {
-    origin: "*",
+    origin: "http://localhost:8000",
   },
 });
 
 io.on("connection", (socket) => {
   socket.on("create-room", () => {
-    const id = uuidv4();
-    rooms[id] = { id, players: [] };
-    socket.emit("created-room", rooms[id]);
+    const room = new Room(uuidv4());
+    rooms[room.id] = room;
+
+    socket.emit("created-room", room);
   });
 
   socket.on("join-room", (id) => {
-    if (rooms[id]) {
-      rooms[id].players.push(socket.id);
-    }
+    if (rooms[id]) rooms[id].players.push(socket.id);
 
     socket.emit("joined-room", rooms[id]);
   });
