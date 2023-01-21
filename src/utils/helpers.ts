@@ -2,9 +2,9 @@ import { Color } from 'excalibur'
 import { Point, Points } from '../types/types'
 
 export const getMins = (cells: any) => {
-  return cells.reduce((acc: [Point, Point], val: Points) => {
-    acc[0] = acc[0] == undefined || val[0] < acc[0] ? val[0] : acc[0]
-    acc[1] = acc[1] == undefined || val[1] < acc[1] ? val[1] : acc[1]
+  return cells.reduce((acc: [Point, Point], points: Points) => {
+    acc[0] = acc[0] == undefined || points[0] < acc[0] ? points[0] : acc[0]
+    acc[1] = acc[1] == undefined || points[1] < acc[1] ? points[1] : acc[1]
     return acc
   }, [])
 }
