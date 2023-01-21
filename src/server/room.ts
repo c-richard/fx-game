@@ -11,7 +11,7 @@ export class Room {
     id: string
     players: Record<string, Player> = {}
     points = range(1, 64).map(() => generatePoint(0, 1000))
-    freeLand = range(1, 64)
+    freeLand = range(0, 64 - 1)
 
     constructor(id: string) {
         this.id = id

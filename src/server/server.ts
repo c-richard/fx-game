@@ -16,7 +16,7 @@ io.on('connection', (socket) => {
         rooms[room.id] = room
         rooms[room.id].addPlayer(socket.id)
 
-        socket.emit('created-room', JSON.stringify(room))
+        socket.emit('created-room', room)
     })
 
     socket.on('join-room', (roomId) => {
