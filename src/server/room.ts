@@ -1,19 +1,32 @@
-import { range } from "rambda";
+import { range } from 'rambda'
+import { Player } from './player'
 
 const generateNumber = (min: number, max: number) =>
-  Math.min(max, Math.max(min, Math.random() * 1000));
+    Math.min(max, Math.max(min, Math.random() * 1000))
 
 const generatePoint = (min: number, max: number) =>
-  [generateNumber(min, max), generateNumber(min, max)] as const;
+    [generateNumber(min, max), generateNumber(min, max)] as const
 
 export class Room {
-  id: string;
-  players: string[];
-  points: (readonly [x: number, y: number])[];
+    id: string
+    players: Record<string, Player> = {}
+    points = range(1, 64).map(() => generatePoint(0, 1000))
+    freeLand = range(1, 64)
 
-  constructor(id: string) {
-    this.id = id;
-    this.points = range(1, 64).map(() => generatePoint(0, 1000));
-    this.players = [];
-  }
+    constructor(id: string) {
+        this.id = id
+    }
+
+    addPlayer(playerId: string) {
+        const player = new Player(playerId)
+
+        const randomFreeLand = this.freeLand.splice(
+            Math.floor(Math.random() * 64),
+            1
+        )
+
+        player.addLand(randomFreeLand)
+
+        this.players[playerId] = player
+    }
 }

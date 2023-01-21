@@ -1,9 +1,8 @@
 import { Delaunay } from 'd3-delaunay'
-
-type Point = [x: number, y: number]
+import { Point } from '../types/types'
 
 export const generateVoronoi = (
-    points: Array<Point>,
+    points: Point[],
     bounds: [number, number, number, number]
 ) => {
     const delaunay = Delaunay.from(points)

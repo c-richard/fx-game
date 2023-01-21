@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Engine, Actor, vec, Vector, Color, Line, Polygon } from 'excalibur'
-import { Room } from '../types/Room'
-import { generateVoronoi } from './map'
+import { Room } from '../types/types'
+import { generateVoronoi } from '../utils/generateVoronoi'
 import { Delaunay } from 'd3-delaunay'
 
 export function Game({ room }: { room: Room }) {

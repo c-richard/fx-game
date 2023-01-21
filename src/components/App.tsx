@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { socketClient } from '../utils/SocketClient'
+import { socketClient } from '../utils/client'
 
 import { Game } from './Game'
-import { Room } from '../types/Room'
+import { Room } from '../types/types'
 
 function App() {
     const [error, setError] = useState<string>()
@@ -11,8 +11,6 @@ function App() {
 
     useEffect(() => {
         socketClient.onRoomCreated = (room) => {
-            console.log('set room', room)
-
             setError('')
             setRoom(room)
         }
@@ -38,7 +36,7 @@ function App() {
     return (
         <div className="App">
             <h1>4x Game</h1>
-            { /* TODO: This should be moved into game at some point */ }
+            {/* TODO: This should be moved into game at some point */}
             <canvas id="legame"></canvas>
             <div className="card">
                 {room ? (
