@@ -14,6 +14,7 @@ import { generateVoronoi } from '../utils/generateVoronoi'
 import { Delaunay } from 'd3-delaunay'
 import { socketClient } from '../utils/client'
 import { getMins, randomColour } from '../utils/helpers'
+import Tile from './actors/tileActor'
 
 export function Game({ roomId, room }: { roomId: string; room?: Room }) {
     useEffect(() => {
@@ -80,7 +81,7 @@ function drawPolygon(
 
     const polygonAsVector = cell.map(([x, y]) => vec(x, y))
 
-    const cellActor = new Actor({
+    const cellActor = new Tile({
         pos: vec(minX, minY),
     })
 
