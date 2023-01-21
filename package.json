@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "rambda": "^7.4.0",
     "d3-delaunay": "^6.0.2",
+    "rambda": "^7.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "socket.io": "^4.5.4",
