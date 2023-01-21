@@ -3,21 +3,36 @@ import { Engine, Actor, vec, Vector, Color, Line, Polygon } from 'excalibur'
 import { Room } from '../types/types'
 import { generateVoronoi } from '../utils/generateVoronoi'
 import { Delaunay } from 'd3-delaunay'
+import { socketClient } from '../utils/client'
 
-export function Game({ room }: { room: Room }) {
+export function Game({ roomId, room }: { roomId: string; room?: Room }) {
     useEffect(() => {
-        const game = new Engine({
-            canvasElementId: 'legame',
-            width: 1000,
-            height: 1000,
-        })
+        if (room == null) {
+            socketClient.joinRoom(roomId)
+        } else {
+            const game = new Engine({
+                canvasElementId: 'legame',
+                width: 1000,
+                height: 1000,
+            })
 
-        const voronoi = generateVoronoi(room.points, [0, 0, 1000, 1000])
-        room.points.forEach((_, i) => drawCell(game, voronoi.cellPolygon(i)))
+            const voronoi = generateVoronoi(room.points, [0, 0, 1000, 1000])
+            room.points.forEach((_, i) =>
+                drawCell(game, voronoi.cellPolygon(i))
+            )
 
-        game.start()
-    }, [])
-    return <div>Game {room.id}</div>
+            game.start()
+        }
+    }, [room])
+
+    return room ? (
+        <div>
+            <canvas id="legame"></canvas>
+            Game {room.id}
+        </div>
+    ) : (
+        <p>Cloud turn into a sqwuare shape</p>
+    )
 }
 
 function drawCell(game: Engine, cell: Delaunay.Polygon): any {
