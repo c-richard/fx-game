@@ -13,6 +13,7 @@ import { Room } from '../types/types'
 import { generateVoronoi } from '../utils/generateVoronoi'
 import { Delaunay } from 'd3-delaunay'
 import { socketClient } from '../utils/client'
+import { getMins, randomColour } from '../utils/helpers'
 
 export function Game({ roomId, room }: { roomId: string; room?: Room }) {
     useEffect(() => {
@@ -75,8 +76,7 @@ function drawPolygon(
     cell: Delaunay.Polygon,
     ownerId: boolean = false
 ) {
-    const minX = Math.min(...cell.map((p) => p[0]))
-    const minY = Math.min(...cell.map((p) => p[1]))
+    const [minX, minY] = getMins(cell)
 
     const polygonAsVector = cell.map(([x, y]) => vec(x, y))
 
