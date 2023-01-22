@@ -12,3 +12,5 @@ export interface Room {
     points: Point[]
     players: Record<string, Player>
 }
+
+export type TileType  = "PLANET" | "FOG" | "UNKNOWN";

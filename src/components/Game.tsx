@@ -81,19 +81,22 @@ function drawPolygon(
 
     const polygonAsVector = cell.map(([x, y]) => vec(x, y))
 
-    const cellActor = new Tile({
+    const tileActor = new Tile({
         pos: vec(minX, minY),
+        color: randomColour(),
+        ownerId: null,
+        type: 'UNKNOWN',
     })
 
-    cellActor.anchor = Vector.Zero
-    cellActor.graphics.use(
+    tileActor.anchor = Vector.Zero
+    tileActor.graphics.use(
         new Polygon({
             points: polygonAsVector,
             color: ownerId ? Color.Red : Color.ExcaliburBlue,
         })
     )
 
-    game.add(cellActor)
+    game.add(tileActor)
 }
 
 function drawLine(game: Engine, a: Delaunay.Point, b: Delaunay.Point) {
