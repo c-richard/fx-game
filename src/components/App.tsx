@@ -11,13 +11,10 @@ function App() {
     const [room, setRoom] = useState<Room>()
     const [, setLocation] = useLocation()
 
+    const clientId = localStorage.getItem('id') as string
+
     useEffect(() => {
-        socketClient.onRoomCreated = (room) => {
-            setError('')
-            setRoom(room)
-            setLocation(`/room/${room.id}`)
-        }
-        socketClient.onRoomJoined = (room) => {
+        socketClient.onJoined = ({ room }) => {
             if (room == null) {
                 setError('Room not found')
                 return
@@ -33,14 +30,16 @@ function App() {
         <div className="App">
             <Route path="/">
                 <h1>4x Game</h1>
-                <button onClick={() => socketClient.createRoom()}>
+                <button onClick={() => socketClient.createRoom(clientId)}>
                     Host game
                 </button>
                 <input
                     type="text"
                     onChange={(e) => setRoomIdInput(e.target.value)}
                 />
-                <button onClick={() => socketClient.joinRoom(roomIdInput)}>
+                <button
+                    onClick={() => socketClient.joinRoom(roomIdInput, clientId)}
+                >
                     Join game
                 </button>
                 {error && <p>{error}</p>}

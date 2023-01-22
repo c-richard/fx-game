@@ -19,20 +19,24 @@ export class Room {
         this.id = id
     }
 
-    addPlayer(playerId: string) {
-        const player = new Player(playerId)
-
-        this.transferLand(
-            Math.floor(Math.random() * this.freeLand.length),
-            player
+    addPlayer(clientId: string) {
+        const playerIsAlreadyOnMap = Object.values(this.players).find(
+            (p) => p.id == clientId
         )
 
-        this.players[playerId] = player
+        if (playerIsAlreadyOnMap) return null
+
+        const newPlayer = new Player(clientId)
+
+        const landId = Math.floor(Math.random() * this.freeLand.length)
+        this.transferLand(landId, newPlayer)
+        this.players[newPlayer.id] = newPlayer
+
+        return newPlayer
     }
 
     transferLand(landId: number, player: Player) {
         const candidateLand = this.landToPlayer[landId]
-
         if (candidateLand == undefined) {
             this.landToPlayer[landId] = player
             this.freeLand.splice(landId, 1)
@@ -43,7 +47,7 @@ export class Room {
             player.addLand(landId)
         }
 
-        this.checkWinCondition()
+        return { landId, playerId: player.id }
     }
 
     checkWinCondition() {
@@ -53,6 +57,9 @@ export class Room {
 
         if (playersWithLand.length === 1) {
             this.winner = playersWithLand[0]
+            return { playerId: this.winner?.id }
         }
+
+        return null
     }
 }

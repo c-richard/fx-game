@@ -8,5 +8,5 @@ export interface Player {
 export interface Room {
     id: string
     points: Point[]
-    players: Player[]
+    players: Record<string, Player>
 }

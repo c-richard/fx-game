@@ -2,26 +2,41 @@ import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { io, Socket } from 'socket.io-client'
 import { Room } from '../types/types'
 
+export interface OnTransfer {
+    landId: number
+    playerId: string
+}
+
+export interface OnJoined {
+    room: Room
+}
+
+export interface OnWinner {
+    playerId: string
+}
+
 export class Client {
     socket: Socket<DefaultEventsMap, DefaultEventsMap>
 
-    onRoomCreated: (room: Room) => void = () => {}
-    onRoomJoined: (room?: Room) => void = () => {}
+    onTransfer: (response: OnTransfer) => void = () => {}
+    onJoined: (response: OnJoined) => void = () => {}
+    onWinner: (response: OnWinner) => void = () => {}
 
     constructor(origin = 'http://localhost:3001') {
         this.socket = io(origin)
         this.socket.connect()
 
-        this.socket.on('created-room', (room) => this.onRoomCreated(room))
-        this.socket.on('joined-room', (room) => this.onRoomJoined(room))
+        this.socket.on('joined', (response) => this.onJoined(response))
+        this.socket.on('transfer', (response) => this.onTransfer(response))
+        this.socket.on('winner', (response) => this.onWinner(response))
     }
 
-    createRoom() {
-        this.socket.emit('create-room')
+    createRoom(clientId: string) {
+        this.socket.emit('create', clientId)
     }
 
-    joinRoom(id: string) {
-        this.socket.emit('join-room', id)
+    joinRoom(roomId: string, clientId: string) {
+        this.socket.emit('join', roomId, clientId)
     }
 }
 
