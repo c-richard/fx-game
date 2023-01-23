@@ -8,6 +8,7 @@ import {
     Line,
     Polygon,
     DisplayMode,
+    PolygonCollider,
 } from 'excalibur'
 import { Room } from '../types/types'
 import { generateVoronoi } from '../utils/generateVoronoi'
@@ -81,9 +82,9 @@ function drawPolygon(
 
     const polygonAsVector = cell.map(([x, y]) => vec(x, y))
 
-    const tileActor = new Tile({
+    const tileActor: Actor = new Tile({
         pos: vec(minX, minY),
-        color: randomColour(),
+        color: ownerId ? Color.Red : Color.ExcaliburBlue,
         ownerId: null,
         type: 'UNKNOWN',
     })
@@ -92,7 +93,7 @@ function drawPolygon(
     tileActor.graphics.use(
         new Polygon({
             points: polygonAsVector,
-            color: ownerId ? Color.Red : Color.ExcaliburBlue,
+            color: tileActor.color,
         })
     )
 
