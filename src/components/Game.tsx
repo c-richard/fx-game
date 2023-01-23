@@ -85,6 +85,7 @@ function drawPolygon(
     const tileActor: Actor = new Tile({
         pos: vec(minX, minY),
         color: ownerId ? Color.Red : Color.ExcaliburBlue,
+        radius: 10,
         ownerId: null,
         type: 'UNKNOWN',
     })

@@ -1,11 +1,4 @@
-import {
-  Actor,
-  CollisionType,
-  Color,
-  Engine,
-  PolygonCollider,
-  Vector,
-} from 'excalibur'
+import { Actor, Color, Engine, Vector } from 'excalibur'
 import { TileType } from '../../types/types'
 
 class Tile extends Actor {
@@ -16,7 +9,7 @@ class Tile extends Actor {
   constructor(p: {
     pos: Vector
     color: Color
-    collider: PolygonCollider
+    radius: number
     ownerId: string | null
     type: TileType
   }) {
@@ -24,12 +17,10 @@ class Tile extends Actor {
     super(res)
     this.ownerId = ownerId
     this.type = type
-    this.body.collisionType = CollisionType.Passive
-    this.on('pointerdown', () => (this.isSelected = true))
   }
 
-  onPostUpdate(engine: Engine, delta: number): void {
-    if (this.isSelected) this.color = Color.Black
+  onInitialize(engine: Engine): void {
+    engine.on('pointerdown', () => console.log(this.pos))
   }
 }
 
