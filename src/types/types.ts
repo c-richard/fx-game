@@ -10,6 +10,7 @@ export interface Player {
 export interface Room {
     id: string
     points: Point[]
+    stage: 'LOBBY' | 'PLAY' | 'ENDED'
     players: Record<string, Player>
 }
 

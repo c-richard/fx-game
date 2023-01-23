@@ -4,6 +4,7 @@ import { socketClient } from '../utils/client'
 import { Game } from './Game'
 import { Room } from '../types/types'
 import { Route, useLocation } from 'wouter'
+import { Lobby } from './Lobby'
 
 function App() {
     const [error, setError] = useState<string>()
@@ -22,7 +23,10 @@ function App() {
 
             setError('')
             setRoom(room)
-            setLocation(`/room/${room.id}`)
+
+            if (room.stage == 'LOBBY') setLocation(`/room/${room.id}/lobby`)
+            if (room.stage == 'PLAY') setLocation(`/room/${room.id}/play`)
+            if (room.stage == 'ENDED') setLocation(`/room/${room.id}/ended`)
         }
     }, [])
 
@@ -44,7 +48,10 @@ function App() {
                 </button>
                 {error && <p>{error}</p>}
             </Route>
-            <Route<{ roomId: string }> path="/room/:roomId">
+            <Route<{ roomId: string }> path="/room/:roomId/lobby">
+                {({ roomId }) => <Lobby roomId={roomId} room={room} />}
+            </Route>
+            <Route<{ roomId: string }> path="/room/:roomId/play">
                 {({ roomId }) => <Game roomId={roomId} room={room} />}
             </Route>
         </div>

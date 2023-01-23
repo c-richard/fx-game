@@ -10,6 +10,7 @@ const generatePoint = (min: number, max: number) =>
 export class Room {
     id: string
     winner?: Player
+    stage: 'LOBBY' | 'PLAY' | 'ENDED' = 'LOBBY'
     players: Record<string, Player> = {}
     points = range(1, 64).map(() => generatePoint(0, 1000))
     freeLand = range(0, 63)
@@ -17,6 +18,10 @@ export class Room {
 
     constructor(id: string) {
         this.id = id
+    }
+
+    moveToStage(stage: typeof this.stage) {
+        this.stage = stage
     }
 
     addPlayer(clientId: string) {
