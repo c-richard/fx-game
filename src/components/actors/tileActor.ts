@@ -67,8 +67,8 @@ class Tile extends Actor {
   }
 
   onPostUpdate(_engine: Engine, _delta: number): void {
-    if (this.isSelected) this.color = Color.Black
-    else if (this.isHovered) this.color = Color.Yellow
+    if (this.isSelected) this.color = this.tileColor.darken(0.5)
+    else if (this.isHovered) this.color = this.tileColor.lighten()
     else this.color = this.tileColor
   }
 }
