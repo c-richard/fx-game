@@ -29,26 +29,27 @@ export function Game({ roomId, room }: { roomId: string; room?: Room }) {
                 canvasElementId: 'legame',
                 width: 1000,
                 height: 1000,
-                displayMode: DisplayMode.FitContainer,
+                displayMode: DisplayMode.FitScreenAndZoom,
             })
 
             const voronoi = generateVoronoi(room.points, [0, 0, 1000, 1000])
-            room.points
-                .forEach((_, i) => drawCell(game, voronoi.cellPolygon(i)))
+            room.points.forEach((_, i) =>
+                createTile(game, voronoi.cellPolygon(i))
+            )
 
             // TODO modify existing actors to indicate player ownership
-            // Object.values(room.players).forEach((p) => {
-            //     p.land.forEach((land) => {
-            //         drawCell(game, voronoi.cellPolygon(land), true)
-            //     })
-            // })
+            Object.values(room.players).forEach((p) => {
+                p.land.forEach((landId) => {
+                    createTile(game, voronoi.cellPolygon(landId), true)
+                })
+            })
 
             game.start()
 
             // TODO modify existing actors to indicate player ownership
-            // socketClient.onTransfer = ({ landId }) => {
-            //     drawCell(game, voronoi.cellPolygon(landId), true)
-            // }
+            socketClient.onTransfer = ({ landId }) => {
+                createTile(game, voronoi.cellPolygon(landId), true)
+            }
 
             return () => game.stop()
         }
@@ -64,19 +65,7 @@ export function Game({ roomId, room }: { roomId: string; room?: Room }) {
     )
 }
 
-function drawCell(
-    game: Engine,
-    cell: Delaunay.Polygon,
-    owned: boolean = false
-): any {
-    drawPolygon(game, cell, owned)
-
-    cell.forEach((point, i) => {
-        drawLine(game, point, cell[(i + 1) % cell.length])
-    })
-}
-
-function drawPolygon(
+function createTile(
     game: Engine,
     cell: Delaunay.Polygon,
     ownerId: boolean = false
@@ -93,26 +82,5 @@ function drawPolygon(
         type: 'UNKNOWN',
     })
 
-    tileActor.anchor = Vector.Zero
-
     game.add(tileActor)
-}
-
-function drawLine(game: Engine, a: Delaunay.Point, b: Delaunay.Point) {
-    const lineActor = new Actor({
-        pos: vec(0, 0),
-    })
-
-    lineActor.anchor = Vector.Zero
-
-    lineActor.graphics.use(
-        new Line({
-            start: vec(a[0], a[1]),
-            end: vec(b[0], b[1]),
-            color: Color.Vermilion,
-            thickness: 5,
-        })
-    )
-
-    game.add(lineActor)
 }
