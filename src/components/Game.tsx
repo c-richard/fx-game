@@ -34,7 +34,6 @@ export function Game({ roomId, room }: { roomId: string; room?: Room }) {
 
             const voronoi = generateVoronoi(room.points, [0, 0, 1000, 1000])
             room.points
-                .slice(0, 1)
                 .forEach((_, i) => drawCell(game, voronoi.cellPolygon(i)))
 
             // TODO modify existing actors to indicate player ownership
@@ -88,19 +87,13 @@ function drawPolygon(
 
     const tileActor = new Tile({
         pos: vec(minX, minY),
-        color: ownerId ? Color.Red : Color.ExcaliburBlue,
+        tileColor: ownerId ? Color.Red : Color.ExcaliburBlue,
         polygon: polygonAsVector,
         ownerId: null,
         type: 'UNKNOWN',
     })
 
     tileActor.anchor = Vector.Zero
-    tileActor.graphics.use(
-        new Circle({
-            radius: 100,
-            color: tileActor.color,
-        })
-    )
 
     game.add(tileActor)
 }

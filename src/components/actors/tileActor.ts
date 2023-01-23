@@ -1,60 +1,76 @@
 import {
-    Actor,
-    Color,
-    Engine,
-    Polygon,
-    PolygonCollider,
-    Vector,
+  Actor,
+  Color,
+  Engine,
+  Polygon,
+  PolygonCollider,
+  Vector,
 } from 'excalibur'
 import { TileType } from '../../types/types'
 
 class Tile extends Actor {
-    public ownerId: string | null = null
-    public type: TileType = 'UNKNOWN'
-    public isSelected: boolean = false
-    polygon: Vector[] = []
+  public ownerId: string | null = null
+  public type: TileType = 'UNKNOWN'
+  public isSelected: boolean = false
+  public isHovered: boolean = false
+  public tileColor: Color = Color.Red
+  polygon: Vector[] = []
 
-    constructor({
-        ownerId,
-        type,
-        polygon,
-        pos,
-        ...res
-    }: {
-        pos: Vector
-        color: Color
-        polygon: Vector[]
-        ownerId: string | null
-        type: TileType
-    }) {
-        super({
-            ...res,
-            pos,
-            collider: new PolygonCollider({
-                points: polygon,
-                offset: pos.negate(),
-            }),
-        })
+  constructor({
+    ownerId,
+    type,
+    polygon,
+    tileColor,
+    pos,
+    ...res
+  }: {
+    pos: Vector
+    tileColor: Color
+    polygon: Vector[]
+    ownerId: string | null
+    type: TileType
+  }) {
+    super({
+      ...res,
+      pos,
+      collider: new PolygonCollider({
+        points: polygon,
+        offset: pos.negate(),
+      }),
+    })
 
-        this.polygon = polygon
-        this.ownerId = ownerId
-        this.type = type
-        this.enableCapturePointer = true
-    }
+    this.polygon = polygon
+    this.ownerId = ownerId
+    this.type = type
+    this.tileColor = tileColor
 
-    onInitialize(engine: Engine): void {
-        this.graphics.use(
-            new Polygon({
-                points: this.polygon,
-                color: Color.Green,
-            })
-        )
+    this.graphics.use(
+      new Polygon({
+        points: this.polygon,
+        color: tileColor,
+      })
+    )
+  }
 
-        this.on('pointerdown', () => {
-            console.log('clicked', this.pos)
-            this.isSelected = true
-        })
-    }
+  onInitialize(): void {
+    this.on('pointerdown', () => {
+      this.isSelected = true
+    })
+
+    this.on('pointerenter', () => {
+      this.isHovered = true
+    })
+
+    this.on('pointerleave', () => {
+      this.isHovered = false
+    })
+  }
+
+  onPostUpdate(_engine: Engine, _delta: number): void {
+    if (this.isSelected) this.color = Color.Black
+    else if (this.isHovered) this.color = Color.Yellow
+    else this.color = this.tileColor
+  }
 }
 
 export default Tile
