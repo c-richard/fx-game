@@ -1,35 +1,24 @@
 import { useEffect } from 'react'
-import {
-    Engine,
-    Actor,
-    vec,
-    Vector,
-    Color,
-    Line,
-    Polygon,
-    DisplayMode,
-    PolygonCollider,
-    Circle,
-    CircleCollider,
-} from 'excalibur'
-import { Room } from '../types/types'
+import { Engine, vec, Color, DisplayMode } from 'excalibur'
 import { generateVoronoi } from '../utils/generateVoronoi'
 import { Delaunay } from 'd3-delaunay'
-import { socketClient } from '../utils/client'
-import { getMins, randomColour } from '../utils/helpers'
+import { getMins } from '../utils/helpers'
 import Tile from './actors/tileActor'
+import { useRoomMutation, useRoomQuery } from '../utils/roomClient'
 
-export function Game({ roomId, room }: { roomId: string; room?: Room }) {
+export function Game({ roomId }: { roomId: string }) {
+    const { join } = useRoomMutation()
+    const room = useRoomQuery((r) => r)
+
     useEffect(() => {
         if (room == null) {
-            const clientId = localStorage.getItem('id') as string
-            socketClient.joinRoom(roomId, clientId)
+            join(roomId)
         } else {
             const game = new Engine({
                 canvasElementId: 'legame',
                 width: 1000,
                 height: 1000,
-                displayMode: DisplayMode.FitScreenAndZoom,
+                displayMode: DisplayMode.FitScreen,
             })
 
             const voronoi = generateVoronoi(room.points, [0, 0, 1000, 1000])
@@ -45,11 +34,6 @@ export function Game({ roomId, room }: { roomId: string; room?: Room }) {
             })
 
             game.start()
-
-            // TODO modify existing actors to indicate player ownership
-            socketClient.onTransfer = ({ landId }) => {
-                createTile(game, voronoi.cellPolygon(landId), true)
-            }
 
             return () => game.stop()
         }

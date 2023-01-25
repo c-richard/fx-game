@@ -2,16 +2,31 @@ export type Point = [x: number, y: number]
 
 export type Points = Array<Point>
 
-export interface Player {
+export type DeepPartial<T> = T extends object
+    ? {
+          [P in keyof T]?: DeepPartial<T[P]>
+      }
+    : T
+
+export interface PlayerResponse {
     id: string
     land: number[]
 }
 
-export interface Room {
+export interface RoomResponse {
     id: string
+    host: PlayerResponse
     points: Point[]
     stage: 'LOBBY' | 'PLAY' | 'ENDED'
-    players: Record<string, Player>
+    players: PlayerResponse[]
 }
 
-export type TileType  = "PLANET" | "FOG" | "UNKNOWN";
+export interface OnJoined {
+    room: RoomResponse
+}
+
+export type OnDiff = {
+    room: DeepPartial<RoomResponse>
+}
+
+export type TileType = 'PLANET' | 'FOG' | 'UNKNOWN'
