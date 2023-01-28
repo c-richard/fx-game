@@ -29,4 +29,4 @@ export type OnDiff = {
     room: DeepPartial<RoomResponse>
 }
 
-export type TileType = 'PLANET' | 'FOG' | 'UNKNOWN'
+export type CellType = 'PLANET' | 'UNKNOWN'

@@ -7,14 +7,14 @@ import {
     PolygonCollider,
     Vector,
 } from 'excalibur'
-import { TileType } from '../../types/types'
+import { CellType } from '../types/types'
 
-class Tile extends Actor {
+class Cell extends Actor {
     public ownerId: string | null = null
-    public type: TileType = 'UNKNOWN'
+    public type: CellType = 'UNKNOWN'
     public isSelected: boolean = false
     public isHovered: boolean = false
-    public tileColor: Color = Color.Red
+    public cellColor: Color = Color.Red
     polygon: Vector[] = []
 
     constructor({
@@ -29,7 +29,7 @@ class Tile extends Actor {
         tileColor: Color
         polygon: Vector[]
         ownerId: string | null
-        type: TileType
+        type: CellType
     }) {
         super({
             ...res,
@@ -43,7 +43,7 @@ class Tile extends Actor {
         this.polygon = polygon
         this.ownerId = ownerId
         this.type = type
-        this.tileColor = tileColor
+        this.cellColor = tileColor
     }
 
     onInitialize(): void {
@@ -64,7 +64,7 @@ class Tile extends Actor {
         this.graphics.show(
             new Polygon({
                 points: this.polygon,
-                color: this.tileColor,
+                color: this.cellColor,
             })
         )
 
@@ -84,10 +84,14 @@ class Tile extends Actor {
     }
 
     onPostUpdate(_engine: Engine, _delta: number): void {
-        if (this.isSelected) this.color = this.tileColor.darken(0.5)
-        else if (this.isHovered) this.color = this.tileColor.lighten()
-        else this.color = this.tileColor
+        if (this.ownerId) {
+            this.color = Color.Red
+            return
+        }
+        if (this.isSelected) this.color = this.cellColor.darken(0.5)
+        else if (this.isHovered) this.color = this.cellColor.lighten()
+        else this.color = this.cellColor
     }
 }
 
-export default Tile
+export default Cell
