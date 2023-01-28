@@ -21,6 +21,7 @@ class Cell extends Actor {
     neighbours: Cell[] = []
     connections: Cell[] = []
     cellCenter: Vector
+    dirty: boolean = true
     onSelected: (cell: Cell) => void = () => {}
     onHoverEnter: (cell: Cell) => void = () => {}
     onHoverLeave: (cell: Cell) => void = () => {}
@@ -67,7 +68,6 @@ class Cell extends Actor {
         })
 
         this.on('pointerleave', () => {
-            this.isHovered = false
             this.onHoverLeave(this)
         })
 
@@ -122,11 +122,15 @@ class Cell extends Actor {
     }
 
     onPostUpdate(_engine: Engine, _delta: number): void {
+        if (this.dirty === false) return
+
         if (this.ownerId) this.cellColor = Color.Red
         if (this.isSelected) this.color = this.cellColor.darken(0.5)
         else if (this.isHovered) this.color = this.cellColor.lighten(0.75)
         else if (this.isSelectable) this.color = this.cellColor.darken(0.25)
         else this.color = this.cellColor
+
+        this.dirty = false
     }
 
     addNeighbour(neighbour: Cell) {

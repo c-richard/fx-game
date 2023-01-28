@@ -54,6 +54,7 @@ export class CustomGame extends Engine {
 
                 this.selectedCell?.neighbours.forEach((neighbour) => {
                     if (this.canSelectCell(neighbour)) {
+                        neighbour.dirty = true
                         neighbour.isSelectable = false
                     }
                 })
@@ -65,6 +66,7 @@ export class CustomGame extends Engine {
 
                 if (this.selectedCell?.hasNeighbour((c) => c === cell)) {
                     this.selectedCell.connect(cell)
+                    this.selectedCell.dirty = true
                     this.selectedCell.isSelected = false
                     this.selectedCell = undefined
                 } else {
@@ -74,9 +76,12 @@ export class CustomGame extends Engine {
                 }
 
                 if (this.selectedCell) {
+                    cell.dirty = true
+
                     this.selectedCell.neighbours.forEach((neighbour) => {
                         if (this.canSelectCell(neighbour)) {
                             neighbour.isSelectable = true
+                            neighbour.dirty = true
                         }
                     })
                 }
@@ -84,7 +89,15 @@ export class CustomGame extends Engine {
 
             cell.onHoverEnter = (cell: Cell) => {
                 if (this.canSelectCell(cell)) {
+                    cell.dirty = true
                     cell.isHovered = true
+                }
+            }
+
+            cell.onHoverLeave = (cell: Cell) => {
+                if (cell.isHovered === true) {
+                    cell.dirty = true
+                    cell.isHovered = false
                 }
             }
         })
