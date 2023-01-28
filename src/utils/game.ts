@@ -1,6 +1,6 @@
 import { Delaunay } from 'd3-delaunay'
 import { Color, DisplayMode, Engine, Tile, vec } from 'excalibur'
-import { RoomResponse } from '../types/types'
+import { Point, RoomResponse } from '../types/types'
 import Cell from './cellActor'
 import { getMins } from './helpers'
 
@@ -22,12 +22,24 @@ export class CustomGame extends Engine {
         const delaunay = Delaunay.from(room.points)
         const voronoi = delaunay.voronoi([0, 0, 1000, 1000])
 
+        // Create cells
         room.points.forEach((_, i) => this.createCell(voronoi.cellPolygon(i)))
+
+        // Assign ownership
         room.players.forEach((player) =>
-            player.land.forEach((land) => {
-                this.cellActors[land].ownerId = player.id
+            player.land.forEach((cellId) => {
+                this.cellActors[cellId].ownerId = player.id
             })
         )
+
+        // Connect neighbours
+        room.points.forEach((_, cellId) => {
+            for (const neighbourCellId of voronoi.neighbors(cellId)) {
+                this.cellActors[cellId].addNeighbour(
+                    this.cellActors[neighbourCellId]
+                )
+            }
+        })
 
         this.cellActors.forEach((cell) => this.add(cell))
     }

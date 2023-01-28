@@ -5,6 +5,7 @@ import {
     Line,
     Polygon,
     PolygonCollider,
+    vec,
     Vector,
 } from 'excalibur'
 import { CellType } from '../types/types'
@@ -16,13 +17,15 @@ class Cell extends Actor {
     public isHovered: boolean = false
     public cellColor: Color = Color.Red
     polygon: Vector[] = []
+    neighbours: Cell[] = []
+    cellCenter: Vector
 
     constructor({
+        pos,
+        tileColor,
+        polygon,
         ownerId,
         type,
-        polygon,
-        tileColor,
-        pos,
         ...res
     }: {
         pos: Vector
@@ -40,6 +43,11 @@ class Cell extends Actor {
             }),
         })
 
+        this.cellCenter = polygon
+            .reduce((acc, v) => {
+                return acc.add(v)
+            }, vec(0, 0))
+            .scale(1 / polygon.length)
         this.polygon = polygon
         this.ownerId = ownerId
         this.type = type
@@ -76,7 +84,18 @@ class Cell extends Actor {
                 start: a,
                 end: b,
                 color: Color.Vermilion,
-                thickness: 5,
+                thickness: 3,
+            })
+
+            this.graphics.show(lineyLine)
+        })
+
+        this.neighbours.forEach((neighbour) => {
+            const lineyLine = new Line({
+                start: this.cellCenter.sub(this.pos),
+                end: neighbour.cellCenter.sub(this.pos),
+                color: Color.Orange,
+                thickness: 3,
             })
 
             this.graphics.show(lineyLine)
@@ -91,6 +110,10 @@ class Cell extends Actor {
         if (this.isSelected) this.color = this.cellColor.darken(0.5)
         else if (this.isHovered) this.color = this.cellColor.lighten()
         else this.color = this.cellColor
+    }
+
+    addNeighbour(neighbour: Cell) {
+        this.neighbours.push(neighbour)
     }
 }
 
