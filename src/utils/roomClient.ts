@@ -48,7 +48,7 @@ class RoomClient {
     }
 }
 
-const roomClient = new RoomClient()
+export const roomClient = new RoomClient()
 
 export const useRoomQuery = <R>(selector: (room?: RoomResponse) => R): R =>
     useSyncExternalStore(roomClient.subscribe.bind(roomClient), () =>
