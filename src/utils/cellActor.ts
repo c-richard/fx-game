@@ -15,13 +15,19 @@ class Cell extends Actor {
     public type: CellType = 'UNKNOWN'
     public isSelected: boolean = false
     public isHovered: boolean = false
+    public isSelectable: boolean = false
     public cellColor: Color = Color.Red
     polygon: Vector[] = []
     neighbours: Cell[] = []
+    connections: Cell[] = []
     cellCenter: Vector
+    onSelected: (cell: Cell) => void = () => {}
+    onHoverEnter: (cell: Cell) => void = () => {}
+    onHoverLeave: (cell: Cell) => void = () => {}
 
     constructor({
         pos,
+        cellCenter,
         tileColor,
         polygon,
         ownerId,
@@ -29,6 +35,7 @@ class Cell extends Actor {
         ...res
     }: {
         pos: Vector
+        cellCenter: Vector
         tileColor: Color
         polygon: Vector[]
         ownerId: string | null
@@ -43,11 +50,7 @@ class Cell extends Actor {
             }),
         })
 
-        this.cellCenter = polygon
-            .reduce((acc, v) => {
-                return acc.add(v)
-            }, vec(0, 0))
-            .scale(1 / polygon.length)
+        this.cellCenter = cellCenter
         this.polygon = polygon
         this.ownerId = ownerId
         this.type = type
@@ -56,15 +59,16 @@ class Cell extends Actor {
 
     onInitialize(): void {
         this.on('pointerdown', () => {
-            this.isSelected = true
+            this.onSelected(this)
         })
 
         this.on('pointerenter', () => {
-            this.isHovered = true
+            this.onHoverEnter(this)
         })
 
         this.on('pointerleave', () => {
             this.isHovered = false
+            this.onHoverLeave(this)
         })
 
         this.anchor = Vector.Zero
@@ -89,31 +93,52 @@ class Cell extends Actor {
 
             this.graphics.show(lineyLine)
         })
+    }
 
-        this.neighbours.forEach((neighbour) => {
-            const lineyLine = new Line({
-                start: this.cellCenter.sub(this.pos),
-                end: neighbour.cellCenter.sub(this.pos),
-                color: Color.Orange,
-                thickness: 3,
-            })
+    connect(neighbour: Cell) {
+        if (this.hasConnection((c) => c === neighbour)) return
 
-            this.graphics.show(lineyLine)
+        this.connections.push(neighbour)
+        neighbour.connections.push(this)
+
+        console.log(
+            'connection',
+            neighbour.pos,
+            this.hasConnection((c) => c === neighbour)
+        )
+
+        const lineyLine = new Line({
+            start: this.cellCenter.sub(this.pos),
+            end: neighbour.cellCenter.sub(this.pos),
+            color: Color.Orange,
+            thickness: 3,
         })
+
+        const owner = this.ownerId ?? neighbour.ownerId
+        this.ownerId = owner
+        neighbour.ownerId = owner
+
+        this.graphics.show(lineyLine)
     }
 
     onPostUpdate(_engine: Engine, _delta: number): void {
-        if (this.ownerId) {
-            this.color = Color.Red
-            return
-        }
+        if (this.ownerId) this.cellColor = Color.Red
         if (this.isSelected) this.color = this.cellColor.darken(0.5)
-        else if (this.isHovered) this.color = this.cellColor.lighten()
+        else if (this.isHovered) this.color = this.cellColor.lighten(0.75)
+        else if (this.isSelectable) this.color = this.cellColor.darken(0.25)
         else this.color = this.cellColor
     }
 
     addNeighbour(neighbour: Cell) {
         this.neighbours.push(neighbour)
+    }
+
+    hasNeighbour(filter: (cell: Cell) => boolean) {
+        return this.neighbours.find(filter) !== undefined
+    }
+
+    hasConnection(filter: (cell: Cell) => boolean) {
+        return this.connections.find(filter) !== undefined
     }
 }
 
