@@ -3,7 +3,7 @@ import { roomClient, useRoomMutation } from '../utils/roomClient'
 import { CustomGame } from '../utils/game'
 
 export function Game({ roomId }: { roomId: string }) {
-    const { join } = useRoomMutation()
+    const { join, leave } = useRoomMutation()
     const room = roomClient.getRoom()
 
     useEffect(() => {
@@ -16,7 +16,10 @@ export function Game({ roomId }: { roomId: string }) {
 
         game.start()
 
-        return () => game.stop()
+        return () => {
+            game.stop()
+            leave()
+        }
     }, [room])
 
     return room ? (

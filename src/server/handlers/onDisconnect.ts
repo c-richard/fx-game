@@ -14,7 +14,7 @@ export function onDisconnect(this: Socket) {
 
     const player = room?.players.find((p) => p.socketId === this.id)
 
-    if (room && player) {
+    if (room && player && room.stage !== 'PLAY') {
         room.removePlayer(player)
 
         room.players.forEach((p) => {

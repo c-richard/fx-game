@@ -13,7 +13,7 @@ export function Lobby({ roomId }: { roomId: string }) {
         }
 
         return () => {
-            if (room && room.stage === 'LOBBY') leave()
+            leave()
         }
     }, [roomId])
 
