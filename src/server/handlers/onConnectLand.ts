@@ -15,7 +15,16 @@ export function onConnectLand(
     if (room && player) {
         player.socketId = this.id
 
-        // TODO check connection is valid
+        const neitherLandIsOwnedByPlayer =
+            room.map
+                .getPlayerLands(player.id)
+                .find((land) => land === landA || land === landB) === undefined
+
+        // TODO also check land is adjecent
+        if (neitherLandIsOwnedByPlayer) {
+            return
+        }
+
         room.addConnection(player, landA, landB)
 
         roomRepository.save(room)
