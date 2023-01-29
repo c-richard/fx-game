@@ -17,6 +17,7 @@ export interface RoomResponse {
     id: string
     host: PlayerResponse
     points: Point[]
+    connections: Connection[]
     stage: 'LOBBY' | 'PLAY' | 'ENDED'
     players: PlayerResponse[]
 }
@@ -28,5 +29,7 @@ export interface OnJoined {
 export type OnDiff = {
     room: DeepPartial<RoomResponse>
 }
+
+export type Connection = { ownerId: string; landA: number; landB: number }
 
 export type CellType = 'PLANET' | 'UNKNOWN'

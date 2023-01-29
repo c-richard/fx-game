@@ -7,6 +7,7 @@ export function roomToResponse(room: Room): RoomResponse {
         id: room.id,
         points: room.map.points,
         stage: room.stage,
+        connections: room.connections,
         host: playerToResponse(room.host, room.map),
         players: room.players.map((p) => playerToResponse(p, room.map)),
     }

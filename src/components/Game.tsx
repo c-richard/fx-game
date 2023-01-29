@@ -12,7 +12,7 @@ export function Game({ roomId }: { roomId: string }) {
             return
         }
 
-        const game = new CustomGame(room)
+        const game = new CustomGame(room, roomClient)
 
         game.start()
 

@@ -1,15 +1,18 @@
 import { Delaunay } from 'd3-delaunay'
 import { Color, DisplayMode, Engine, Tile, vec } from 'excalibur'
-import { Point, RoomResponse } from '../types/types'
+import { Connection, Point, RoomResponse } from '../types/types'
 import Cell from './cellActor'
 import { getMins } from './helpers'
+import { RoomClient } from './roomClient'
 
 export class CustomGame extends Engine {
     private cellActors: Cell[] = []
     private selectedCell?: Cell
     private clientId: string = localStorage.getItem('id') as string
+    private roomClient: RoomClient
+    private roomId: string
 
-    constructor(room: RoomResponse) {
+    constructor(room: RoomResponse, roomClient: RoomClient) {
         super({
             canvasElementId: 'legame',
             width: 1000,
@@ -17,7 +20,17 @@ export class CustomGame extends Engine {
             displayMode: DisplayMode.FitScreen,
         })
 
+        this.roomClient = roomClient
+        this.roomId = room.id
         this.generateMap(room)
+        this.roomClient.subscribeToConnectLand((connectLand: Connection) => {
+            if (room === undefined) return
+
+            const landA = this.cellActors[connectLand.landA]
+            const landB = this.cellActors[connectLand.landB]
+
+            landA.connect(landB, connectLand.ownerId)
+        })
     }
 
     private generateMap(room: RoomResponse) {
@@ -26,7 +39,7 @@ export class CustomGame extends Engine {
 
         // Create cells
         room.points.forEach((point, i) =>
-            this.createCell(point, voronoi.cellPolygon(i))
+            this.createCell(i, point, voronoi.cellPolygon(i))
         )
 
         // Assign ownership
@@ -52,6 +65,7 @@ export class CustomGame extends Engine {
                     return
                 }
 
+                // Mark previous cell as changed
                 this.selectedCell?.neighbours.forEach((neighbour) => {
                     if (this.canSelectCell(neighbour)) {
                         neighbour.dirty = true
@@ -59,22 +73,35 @@ export class CustomGame extends Engine {
                     }
                 })
 
+                // None selected -> Select
                 if (this.selectedCell === undefined) {
                     cell.isSelected = true
                     this.selectedCell = cell
                 }
 
-                if (this.selectedCell?.hasNeighbour((c) => c === cell)) {
-                    this.selectedCell.connect(cell)
+                if (
+                    this.selectedCell.ownerId &&
+                    this.selectedCell?.hasNeighbour((c) => c === cell)
+                ) {
+                    // One selected -> Cell is neighbour to first -> Select
+                    this.selectedCell.connect(cell, this.selectedCell.ownerId)
+                    this.roomClient.connectLand(
+                        this.roomId,
+                        this.clientId,
+                        this.selectedCell.landId,
+                        cell.landId
+                    )
                     this.selectedCell.dirty = true
                     this.selectedCell.isSelected = false
                     this.selectedCell = undefined
                 } else {
+                    // One selected -> Cell is not neighbour to first -> Select
                     this.selectedCell.isSelected = false
                     cell.isSelected = true
                     this.selectedCell = cell
                 }
 
+                // Mark new cell as changed
                 if (this.selectedCell) {
                     cell.dirty = true
 
@@ -102,6 +129,16 @@ export class CustomGame extends Engine {
             }
         })
 
+        // Setup existing connections
+        room.connections.forEach(
+            ({ ownerId, landA: landAId, landB: landBId }) => {
+                const landA = this.cellActors[landAId]
+                const landB = this.cellActors[landBId]
+
+                landA.connect(landB, ownerId)
+            }
+        )
+
         this.cellActors.forEach((cell) => this.add(cell))
     }
 
@@ -122,11 +159,12 @@ export class CustomGame extends Engine {
         return isNeighbourToSelected && hasNoExistingConnection
     }
 
-    private createCell([x, y]: Point, cell: Delaunay.Polygon) {
+    private createCell(landId: number, [x, y]: Point, cell: Delaunay.Polygon) {
         const [minX, minY] = getMins(cell)
         const polygonAsVector = cell.map(([x, y]) => vec(x, y))
 
         const cellActor = new Cell({
+            landId,
             pos: vec(minX, minY),
             cellCenter: vec(x, y),
             tileColor: Color.ExcaliburBlue,

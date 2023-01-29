@@ -1,3 +1,4 @@
+import { Connection } from '../../types/types'
 import { GameMap } from './map'
 import { Player } from './player'
 
@@ -7,6 +8,7 @@ export class Room {
     players: Player[] = []
     stage: 'LOBBY' | 'PLAY' = 'LOBBY'
     map = new GameMap(64)
+    connections: Connection[] = []
 
     constructor(id: string, host: Player) {
         this.id = id
@@ -25,6 +27,15 @@ export class Room {
     removePlayer(player: Player) {
         // todo remove land
         this.players = this.players.filter((p) => p.id !== player.id)
+    }
+
+    addConnection(player: Player, landA: number, landB: number) {
+        this.map.addLandToPlayer(landB, player.id)
+        this.connections.push({
+            ownerId: player.id,
+            landA,
+            landB,
+        })
     }
 
     startGame() {

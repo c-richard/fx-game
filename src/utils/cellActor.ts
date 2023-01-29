@@ -5,12 +5,12 @@ import {
     Line,
     Polygon,
     PolygonCollider,
-    vec,
     Vector,
 } from 'excalibur'
 import { CellType } from '../types/types'
 
 class Cell extends Actor {
+    public landId: number
     public ownerId: string | null = null
     public type: CellType = 'UNKNOWN'
     public isSelected: boolean = false
@@ -27,6 +27,7 @@ class Cell extends Actor {
     onHoverLeave: (cell: Cell) => void = () => {}
 
     constructor({
+        landId,
         pos,
         cellCenter,
         tileColor,
@@ -35,6 +36,7 @@ class Cell extends Actor {
         type,
         ...res
     }: {
+        landId: number
         pos: Vector
         cellCenter: Vector
         tileColor: Color
@@ -51,6 +53,7 @@ class Cell extends Actor {
             }),
         })
 
+        this.landId = landId
         this.cellCenter = cellCenter
         this.polygon = polygon
         this.ownerId = ownerId
@@ -95,30 +98,15 @@ class Cell extends Actor {
         })
     }
 
-    connect(neighbour: Cell) {
-        if (this.hasConnection((c) => c === neighbour)) return
+    connect(neighbour: Cell, ownerId: string) {
+        this.ownerId = ownerId
+        this.dirty = true
+
+        neighbour.ownerId = ownerId
+        neighbour.dirty = true
 
         this.connections.push(neighbour)
         neighbour.connections.push(this)
-
-        console.log(
-            'connection',
-            neighbour.pos,
-            this.hasConnection((c) => c === neighbour)
-        )
-
-        const lineyLine = new Line({
-            start: this.cellCenter.sub(this.pos),
-            end: neighbour.cellCenter.sub(this.pos),
-            color: Color.Orange,
-            thickness: 3,
-        })
-
-        const owner = this.ownerId ?? neighbour.ownerId
-        this.ownerId = owner
-        neighbour.ownerId = owner
-
-        this.graphics.show(lineyLine)
     }
 
     onPostUpdate(_engine: Engine, _delta: number): void {
@@ -129,6 +117,16 @@ class Cell extends Actor {
         else if (this.isHovered) this.color = this.cellColor.lighten(0.75)
         else if (this.isSelectable) this.color = this.cellColor.darken(0.25)
         else this.color = this.cellColor
+
+        this.connections.forEach((connection) => {
+            const lineyLine = new Line({
+                start: this.cellCenter.sub(this.pos),
+                end: connection.cellCenter.sub(this.pos),
+                color: Color.Orange,
+                thickness: 3,
+            })
+            this.graphics.show(lineyLine)
+        })
 
         this.dirty = false
     }
