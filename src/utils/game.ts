@@ -1,5 +1,5 @@
 import { Delaunay } from 'd3-delaunay'
-import { Color, DisplayMode, Engine, Tile, vec } from 'excalibur'
+import { DisplayMode, Engine, vec } from 'excalibur'
 import { Connection, Point, TerrainType, RoomResponse } from '../types/types'
 import Cell from './cellActor'
 import { getMins } from './helpers'
@@ -165,7 +165,11 @@ export class CustomGame extends Engine {
         const hasNoExistingConnection =
             cell.hasConnection((c) => c === this.selectedCell) === false
 
-        return isNeighbourToSelected && hasNoExistingConnection
+        return (
+            isNeighbourToSelected &&
+            hasNoExistingConnection &&
+            cell.type !== 'BLACK_HOLE'
+        )
     }
 
     private createCell(
