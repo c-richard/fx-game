@@ -82,6 +82,12 @@ export class CustomGame extends Engine {
                     }
                 })
 
+                if (this.selectedCell === cell) {
+                    this.selectedCell.isSelected = false
+                    this.selectedCell = undefined
+                    return
+                }
+
                 // None selected -> Select
                 if (this.selectedCell === undefined) {
                     cell.isSelected = true
@@ -159,9 +165,14 @@ export class CustomGame extends Engine {
             )
         }
 
+        const isSelf = cell === this.selectedCell
+
+        if (isSelf) return true
+
         const isNeighbourToSelected = cell.hasNeighbour(
             (n) => n.ownerId === this.selectedCell?.ownerId
         )
+
         const hasNoExistingConnection =
             cell.hasConnection((c) => c === this.selectedCell) === false
 
