@@ -74,59 +74,32 @@ export class CustomGame extends Engine {
                     return
                 }
 
-                // Mark previous cell as changed
-                this.selectedCell?.neighbours.forEach((neighbour) => {
-                    if (this.canSelectCell(neighbour)) {
-                        neighbour.dirty = true
-                        neighbour.isSelectable = false
-                    }
-                })
+                this.resetSelectedCell()
+                this.resetSelectedNeighbours()
 
-                if (this.selectedCell === cell) {
-                    this.selectedCell.isSelected = false
-                    this.selectedCell = undefined
+                if (this.selectedCell === undefined) {
+                    this.selectCell(cell)
                     return
                 }
 
-                // None selected -> Select
-                if (this.selectedCell === undefined) {
-                    cell.isSelected = true
-                    this.selectedCell = cell
+                // Select selected cell -> Deselect it
+                if (this.selectedCell === cell) {
+                    this.deselectCell()
+                    return
                 }
 
-                if (
-                    this.selectedCell.ownerId &&
-                    this.selectedCell?.hasNeighbour((c) => c === cell)
-                ) {
-                    // One selected -> Cell is neighbour to first -> Select
-                    this.selectedCell.connect(cell, this.selectedCell.ownerId)
+                if (this.canCreateRouteToCell(cell)) {
                     this.roomClient.connectLand(
                         this.roomId,
                         this.clientId,
                         this.selectedCell.landId,
                         cell.landId
                     )
-                    this.selectedCell.dirty = true
-                    this.selectedCell.isSelected = false
-                    this.selectedCell = undefined
-                } else {
-                    // One selected -> Cell is not neighbour to first -> Select
-                    this.selectedCell.isSelected = false
-                    cell.isSelected = true
-                    this.selectedCell = cell
+                    this.deselectCell()
+                    return
                 }
 
-                // Mark new cell as changed
-                if (this.selectedCell) {
-                    cell.dirty = true
-
-                    this.selectedCell.neighbours.forEach((neighbour) => {
-                        if (this.canSelectCell(neighbour)) {
-                            neighbour.isSelectable = true
-                            neighbour.dirty = true
-                        }
-                    })
-                }
+                this.selectCell(cell)
             }
 
             cell.onHoverEnter = (cell: Cell) => {
@@ -157,20 +130,71 @@ export class CustomGame extends Engine {
         this.cellActors.forEach((cell) => this.add(cell))
     }
 
+    private deselectCell() {
+        if (this.selectedCell) {
+            this.selectedCell.isSelected = false
+            this.selectedCell = undefined
+        }
+    }
+
+    private selectCell(cell: Cell) {
+        this.selectedCell = cell
+        this.selectedCell.isSelected = true
+        this.selectedCell.dirty = true
+
+        this.selectedCell.neighbours.forEach((neighbour) => {
+            if (this.canCreateRouteToCell(neighbour)) {
+                neighbour.isSelectable = true
+                neighbour.dirty = true
+            }
+        })
+    }
+
+    private resetSelectedCell() {
+        if (this.selectedCell) {
+            this.selectedCell.dirty = true
+            this.selectedCell.isSelectable = false
+            this.selectedCell.isSelected = false
+        }
+    }
+
+    private resetSelectedNeighbours() {
+        this.selectedCell?.neighbours.forEach((neighbour) => {
+            neighbour.dirty = true
+            neighbour.isSelectable = false
+            neighbour.isSelected = false
+        })
+    }
+
     private canSelectCell(cell: Cell) {
-        if (this.selectedCell === undefined) {
+        if (this.selectedCell === undefined || this.selectedCell === cell) {
             return (
                 cell.ownerId === this.clientId &&
-                cell.neighbours.length !== cell.connections.length
+                cell.neighbours.filter((n) => n.type !== 'BLACK_HOLE')
+                    .length !== cell.connections.length
             )
         }
 
-        const isSelf = cell === this.selectedCell
-
-        if (isSelf) return true
+        const isOwnedByPlayer = cell.ownerId === this.clientId
 
         const isNeighbourToSelected = cell.hasNeighbour(
-            (n) => n.ownerId === this.selectedCell?.ownerId
+            (n) => n === this.selectedCell
+        )
+
+        const hasNoExistingConnection =
+            cell.hasConnection((c) => c === this.selectedCell) === false
+
+        return (
+            isOwnedByPlayer ||
+            (isNeighbourToSelected &&
+                hasNoExistingConnection &&
+                cell.type !== 'BLACK_HOLE')
+        )
+    }
+
+    private canCreateRouteToCell(cell: Cell) {
+        const isNeighbourToSelected = cell.hasNeighbour(
+            (n) => n === this.selectedCell
         )
 
         const hasNoExistingConnection =
