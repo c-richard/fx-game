@@ -7,7 +7,7 @@ export class Room {
     host: Player
     players: Player[] = []
     stage: 'LOBBY' | 'PLAY' = 'LOBBY'
-    map?: GameMap = new GameMap(64)
+    map?: GameMap
     connections: Connection[] = []
 
     constructor(id: string, host: Player) {
