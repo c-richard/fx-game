@@ -18,8 +18,8 @@ export type TerrainType = 'PLANETS' | 'SPACE' | 'BLACK_HOLE'
 export interface RoomResponse {
     id: string
     host: PlayerResponse
-    points: Point[]
-    terrainTypes: TerrainType[]
+    points?: Point[]
+    terrainTypes?: TerrainType[]
     connections: Connection[]
     stage: 'LOBBY' | 'PLAY' | 'ENDED'
     players: PlayerResponse[]

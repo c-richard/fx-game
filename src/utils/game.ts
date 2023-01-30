@@ -34,6 +34,10 @@ export class CustomGame extends Engine {
     }
 
     private generateMap(room: RoomResponse) {
+        if (room.points == undefined || room.terrainTypes == undefined) {
+            throw new Error('Room is not in play')
+        }
+
         const delaunay = Delaunay.from(room.points)
         const voronoi = delaunay.voronoi([0, 0, 1000, 1000])
 
@@ -42,7 +46,7 @@ export class CustomGame extends Engine {
             this.createCell(
                 i,
                 point,
-                room.terrainTypes[i],
+                room.terrainTypes?.[i] as TerrainType,
                 voronoi.cellPolygon(i)
             )
         )
