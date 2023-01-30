@@ -7,21 +7,23 @@ import {
     PolygonCollider,
     Vector,
 } from 'excalibur'
-import { CellType } from '../types/types'
+import { TerrainType } from '../types/types'
 
 class Cell extends Actor {
     public landId: number
     public ownerId: string | null = null
-    public type: CellType = 'UNKNOWN'
+    public type: TerrainType
     public isSelected: boolean = false
     public isHovered: boolean = false
     public isSelectable: boolean = false
-    public cellColor: Color = Color.Red
+
+    cellColor: Color = Color.DarkGray
     polygon: Vector[] = []
     neighbours: Cell[] = []
     connections: Cell[] = []
     cellCenter: Vector
     dirty: boolean = true
+
     onSelected: (cell: Cell) => void = () => {}
     onHoverEnter: (cell: Cell) => void = () => {}
     onHoverLeave: (cell: Cell) => void = () => {}
@@ -30,7 +32,6 @@ class Cell extends Actor {
         landId,
         pos,
         cellCenter,
-        tileColor,
         polygon,
         ownerId,
         type,
@@ -39,10 +40,9 @@ class Cell extends Actor {
         landId: number
         pos: Vector
         cellCenter: Vector
-        tileColor: Color
         polygon: Vector[]
         ownerId: string | null
-        type: CellType
+        type: TerrainType
     }) {
         super({
             ...res,
@@ -58,7 +58,6 @@ class Cell extends Actor {
         this.polygon = polygon
         this.ownerId = ownerId
         this.type = type
-        this.cellColor = tileColor
     }
 
     onInitialize(): void {
@@ -75,6 +74,13 @@ class Cell extends Actor {
         })
 
         this.anchor = Vector.Zero
+
+        this.cellColor =
+            this.type === 'BLACK_HOLE'
+                ? Color.Black
+                : this.type === 'PLANETS'
+                ? Color.Orange
+                : Color.Green
 
         this.graphics.show(
             new Polygon({

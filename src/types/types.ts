@@ -13,10 +13,13 @@ export interface PlayerResponse {
     land: number[]
 }
 
+export type TerrainType = 'PLANETS' | 'SPACE' | 'BLACK_HOLE'
+
 export interface RoomResponse {
     id: string
     host: PlayerResponse
     points: Point[]
+    terrainTypes: TerrainType[]
     connections: Connection[]
     stage: 'LOBBY' | 'PLAY' | 'ENDED'
     players: PlayerResponse[]
@@ -31,5 +34,3 @@ export type OnDiff = {
 }
 
 export type Connection = { ownerId: string; landA: number; landB: number }
-
-export type CellType = 'PLANET' | 'UNKNOWN'

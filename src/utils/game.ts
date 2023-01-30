@@ -1,6 +1,6 @@
 import { Delaunay } from 'd3-delaunay'
 import { Color, DisplayMode, Engine, Tile, vec } from 'excalibur'
-import { Connection, Point, RoomResponse } from '../types/types'
+import { Connection, Point, TerrainType, RoomResponse } from '../types/types'
 import Cell from './cellActor'
 import { getMins } from './helpers'
 import { RoomClient } from './roomClient'
@@ -39,7 +39,12 @@ export class CustomGame extends Engine {
 
         // Create cells
         room.points.forEach((point, i) =>
-            this.createCell(i, point, voronoi.cellPolygon(i))
+            this.createCell(
+                i,
+                point,
+                room.terrainTypes[i],
+                voronoi.cellPolygon(i)
+            )
         )
 
         // Assign ownership
@@ -159,7 +164,12 @@ export class CustomGame extends Engine {
         return isNeighbourToSelected && hasNoExistingConnection
     }
 
-    private createCell(landId: number, [x, y]: Point, cell: Delaunay.Polygon) {
+    private createCell(
+        landId: number,
+        [x, y]: Point,
+        type: TerrainType,
+        cell: Delaunay.Polygon
+    ) {
         const [minX, minY] = getMins(cell)
         const polygonAsVector = cell.map(([x, y]) => vec(x, y))
 
@@ -167,10 +177,9 @@ export class CustomGame extends Engine {
             landId,
             pos: vec(minX, minY),
             cellCenter: vec(x, y),
-            tileColor: Color.ExcaliburBlue,
             polygon: polygonAsVector,
             ownerId: null,
-            type: 'UNKNOWN',
+            type,
         })
 
         this.cellActors.push(cellActor)
