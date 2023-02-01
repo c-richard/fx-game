@@ -1,5 +1,5 @@
 import { Delaunay } from 'd3-delaunay'
-import { DisplayMode, Engine, vec } from 'excalibur'
+import { DisplayMode, Engine, GlobalCoordinates, Input, vec } from 'excalibur'
 import { Connection, Point, TerrainType, RoomResponse } from '../types/types'
 import Cell from './cellActor'
 import { getMins } from './helpers'
@@ -8,29 +8,21 @@ import { RoomClient } from './roomClient'
 export class CustomGame extends Engine {
     private cellActors: Cell[] = []
     private selectedCell?: Cell
+    private dragStart?: GlobalCoordinates
+    private isDragging = false
     private clientId: string = localStorage.getItem('id') as string
     private roomClient: RoomClient
-    private roomId: string
+    private room: RoomResponse
 
     constructor(room: RoomResponse, roomClient: RoomClient) {
         super({
             canvasElementId: 'legame',
-            width: 1000,
-            height: 1000,
-            displayMode: DisplayMode.FitScreen,
+            displayMode: DisplayMode.FillScreen,
+            pointerScope: Input.PointerScope.Document,
         })
 
         this.roomClient = roomClient
-        this.roomId = room.id
-        this.generateMap(room)
-        this.roomClient.subscribeToConnectLand((connectLand: Connection) => {
-            if (room === undefined) return
-
-            const landA = this.cellActors[connectLand.landA]
-            const landB = this.cellActors[connectLand.landB]
-
-            landA.connect(landB, connectLand.ownerId)
-        })
+        this.room = room
     }
 
     private generateMap(room: RoomResponse) {
@@ -70,6 +62,8 @@ export class CustomGame extends Engine {
         // Setup cell selection
         this.cellActors.forEach((cell) => {
             cell.onSelected = (cell: Cell) => {
+                if (this.isDragging) return
+
                 if (this.canSelectCell(cell) === false) {
                     return
                 }
@@ -90,7 +84,7 @@ export class CustomGame extends Engine {
 
                 if (this.canCreateRouteToCell(cell)) {
                     this.roomClient.connectLand(
-                        this.roomId,
+                        this.room.id,
                         this.clientId,
                         this.selectedCell.landId,
                         cell.landId
@@ -103,6 +97,8 @@ export class CustomGame extends Engine {
             }
 
             cell.onHoverEnter = (cell: Cell) => {
+                if (this.isDragging) return
+
                 if (this.canSelectCell(cell)) {
                     cell.dirty = true
                     cell.isHovered = true
@@ -110,6 +106,8 @@ export class CustomGame extends Engine {
             }
 
             cell.onHoverLeave = (cell: Cell) => {
+                if (this.isDragging) return
+
                 if (cell.isHovered === true) {
                     cell.dirty = true
                     cell.isHovered = false
@@ -226,6 +224,67 @@ export class CustomGame extends Engine {
         })
 
         this.cellActors.push(cellActor)
+    }
+
+    public onInitialize(_engine: Engine): void {
+        this.generateMap(this.room)
+        this.roomClient.subscribeToConnectLand((connectLand: Connection) => {
+            if (this.room === undefined) return
+
+            const landA = this.cellActors[connectLand.landA]
+            const landB = this.cellActors[connectLand.landB]
+
+            landA.connect(landB, connectLand.ownerId)
+        })
+
+        const initialCell = this.cellActors.find(
+            (c) => c.ownerId === this.clientId
+        )
+
+        if (initialCell) this.currentScene.camera.pos = initialCell.pos
+
+        this.input.pointers.on('wheel', (evt) => {
+            const isZoomIn = evt.deltaY > 0
+
+            if (isZoomIn) {
+                this.currentScene.camera.zoom *= 0.9
+            } else {
+                this.currentScene.camera.zoom *= 1.1
+            }
+        })
+
+        this.input.pointers.on('down', (evt) => {
+            this.dragStart = evt.coordinates
+        })
+
+        this.input.pointers.on('up', (evt) => {
+            this.dragStart = undefined
+            this.isDragging = false
+        })
+
+        this.input.pointers.on('move', (evt) => {
+            if (this.dragStart !== undefined) {
+                const endPos = evt.coordinates
+                const startToEndWorld = endPos.worldPos
+                    .sub(this.dragStart.worldPos)
+                    .scale(-1)
+                const startToEndScreen = endPos.screenPos
+                    .sub(this.dragStart.screenPos)
+                    .scale(-1)
+
+                if (startToEndScreen.size < 15 && this.isDragging === false)
+                    return
+
+                this.isDragging = true
+
+                this.currentScene.camera.pos =
+                    this.currentScene.camera.pos.add(startToEndWorld)
+
+                return
+            }
+        })
+
+        this.input
     }
 
     public start() {

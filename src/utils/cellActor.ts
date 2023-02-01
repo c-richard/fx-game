@@ -61,7 +61,7 @@ class Cell extends Actor {
     }
 
     onInitialize(): void {
-        this.on('pointerdown', () => {
+        this.on('pointerup', () => {
             this.onSelected(this)
         })
 
