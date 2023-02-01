@@ -241,7 +241,10 @@ export class CustomGame extends Engine {
             (c) => c.ownerId === this.clientId
         )
 
-        if (initialCell) this.currentScene.camera.pos = initialCell.pos
+        if (initialCell) {
+            this.currentScene.camera.pos = initialCell.cellCenter
+            this.currentScene.camera.zoom = 2
+        }
 
         this.input.pointers.on('wheel', (evt) => {
             const isZoomIn = evt.deltaY > 0
@@ -251,6 +254,11 @@ export class CustomGame extends Engine {
             } else {
                 this.currentScene.camera.zoom *= 1.1
             }
+
+            this.currentScene.camera.zoom = Math.min(
+                3,
+                Math.max(0.3, this.currentScene.camera.zoom)
+            )
         })
 
         this.input.pointers.on('down', (evt) => {
@@ -279,6 +287,16 @@ export class CustomGame extends Engine {
 
                 this.currentScene.camera.pos =
                     this.currentScene.camera.pos.add(startToEndWorld)
+
+                this.currentScene.camera.pos.x = Math.min(
+                    1000,
+                    Math.max(0, this.currentScene.camera.pos.x)
+                )
+
+                this.currentScene.camera.pos.y = Math.min(
+                    1000,
+                    Math.max(0, this.currentScene.camera.pos.y)
+                )
 
                 return
             }
