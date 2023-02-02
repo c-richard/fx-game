@@ -13,7 +13,7 @@ export interface PlayerResponse {
     land: number[]
 }
 
-export type TerrainType = 'PLANETS' | 'SPACE' | 'BLACK_HOLE'
+export type TerrainType = 'PLANETS' | 'SPACE' | 'BLACK_HOLE' | 'EDGE'
 
 export interface RoomResponse {
     id: string

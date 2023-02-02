@@ -61,6 +61,7 @@ class Cell extends Actor {
     }
 
     onInitialize(): void {
+        if (this.type === 'EDGE') return
         this.on('pointerup', () => {
             this.onSelected(this)
         })

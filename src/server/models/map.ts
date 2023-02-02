@@ -31,10 +31,24 @@ export class GameMap {
         this.points = range(1, size).map(() => generatePoint(0, 1000))
         this.terrainTypes = range(1, size).map(() => generateType())
         this.freeLand = range(0, size - 1)
+
+        this.points.forEach(([x, y], i) => {
+            if (x < 100 || y < 100 || x > 900 || y > 900) {
+                this.terrainTypes[i] = 'EDGE'
+            }
+        })
     }
 
     assignRandomLand(player: Player) {
-        const landId = Math.floor(Math.random() * this.freeLand.length)
+        let landId: number | null = null
+
+        while (landId === null) {
+            landId = Math.floor(Math.random() * this.freeLand.length)
+            if (this.terrainTypes[landId] === 'EDGE') {
+                landId = null
+            }
+        }
+
         this.addLandToPlayer(landId, player.id)
     }
 
