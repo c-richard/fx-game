@@ -1,6 +1,9 @@
 import { range } from 'rambda'
 import { Point, TerrainType } from '../../types/types'
 import { Player } from './player'
+import * as test from 'd3-delaunay'
+
+const a = test.Delaunay.from([[0, 1]])
 
 const generateNumber = (min: number, max: number) =>
     Math.floor(Math.min(max, Math.max(min, Math.random() * 1000)))

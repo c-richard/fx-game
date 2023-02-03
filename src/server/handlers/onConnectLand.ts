@@ -12,7 +12,7 @@ export function onConnectLand(
     const room = roomRepository.getById(roomId)
     const player = room?.players.find((p) => p.id === clientId)
 
-    if (room && player) {
+    if (room && room.map && player) {
         player.socketId = this.id
 
         const neitherLandIsOwnedByPlayer =
