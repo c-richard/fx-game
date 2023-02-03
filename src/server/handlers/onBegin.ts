@@ -1,9 +1,9 @@
 import { Socket } from 'socket.io'
-import { roomRepository } from '../models/repositories'
-import { Player } from '../models/player'
-import { OnDiff } from '../../types/types'
-import { playerToResponse } from '../mappers/playerToResponse'
-import { Room } from '../models/room'
+import { roomRepository } from '../models/repositories.js'
+import { Player } from '../models/player.js'
+import { OnDiff } from '../../types/types.js'
+import { playerToResponse } from '../mappers/playerToResponse.js'
+import { Room } from '../models/room.js'
 
 export function onBegin(this: Socket, roomId: string, clientId: string) {
     const player = new Player(clientId, this.id)

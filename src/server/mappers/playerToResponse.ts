@@ -1,6 +1,6 @@
-import { PlayerResponse } from '../../types/types'
-import { GameMap } from '../models/map'
-import { Player } from '../models/player'
+import { PlayerResponse } from '../../types/types.js'
+import { GameMap } from '../models/map.js'
+import { Player } from '../models/player.js'
 
 export function playerToResponse(
     player: Player,

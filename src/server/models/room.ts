@@ -1,6 +1,6 @@
-import { Connection } from '../../types/types'
-import { GameMap } from './map'
-import { Player } from './player'
+import { Connection } from '../../types/types.js'
+import { GameMap } from './map.js'
+import { Player } from './player.js'
 
 export class Room {
     id: string

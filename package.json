@@ -2,16 +2,17 @@
   "name": "fx-game",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "server": "tsnd --respawn --project ./node.tsconfig.json ./src/server/main.ts ",
+    "server": "ts-node --esm --project ./node.tsconfig.json ./src/server/main.ts",
     "preview": "vite preview"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "d3-delaunay": "^6.0.2",
-    "rambda": "^7.4.0",
+    "rambda": "7.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "socket.io": "^4.5.4",
@@ -26,7 +27,7 @@
     "@types/uuid": "^9.0.0",
     "@vitejs/plugin-react": "^3.0.0",
     "excalibur": "^0.27.0",
-    "ts-node-dev": "^2.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.4",
     "vite": "^4.0.0"
   }

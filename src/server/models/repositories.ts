@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io'
-import { Room } from './room'
+import { Room } from './room.js'
 
 class Repository<T extends { id: string }> {
     items: Partial<Record<string, T>> = {}

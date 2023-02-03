@@ -1,10 +1,10 @@
 import { Socket } from 'socket.io'
-import { OnDiff, OnJoined } from '../../types/types'
-import { playerToResponse } from '../mappers/playerToResponse'
-import { roomToResponse } from '../mappers/roomToResponse'
-import { Player } from '../models/player'
-import { Room } from '../models/room'
-import { roomRepository } from '../models/repositories'
+import { OnDiff, OnJoined } from '../../types/types.js'
+import { playerToResponse } from '../mappers/playerToResponse.js'
+import { roomToResponse } from '../mappers/roomToResponse.js'
+import { Player } from '../models/player.js'
+import { Room } from '../models/room.js'
+import { roomRepository } from '../models/repositories.js'
 
 export function onJoin(this: Socket, roomId: string, clientId: string) {
     const player = new Player(clientId, this.id)

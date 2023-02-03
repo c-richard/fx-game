@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io'
-import { roomRepository } from '../models/repositories'
-import { Connection } from '../../types/types'
+
+import { roomRepository } from '../models/repositories.js'
+import { Connection } from '../../types/types.js'
 
 export function onConnectLand(
     this: Socket,

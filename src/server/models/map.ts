@@ -1,9 +1,7 @@
 import { range } from 'rambda'
-import { Point, TerrainType } from '../../types/types'
-import { Player } from './player'
-import * as test from 'd3-delaunay'
-
-const a = test.Delaunay.from([[0, 1]])
+import { Point, TerrainType } from '../../types/types.js'
+import { Player } from './player.js'
+import { Delaunay } from 'd3-delaunay'
 
 const generateNumber = (min: number, max: number) =>
     Math.floor(Math.min(max, Math.max(min, Math.random() * 1000)))
@@ -32,8 +30,25 @@ export class GameMap {
 
     constructor(size: number) {
         this.points = range(1, size).map(() => generatePoint(0, 1000))
-        this.terrainTypes = range(1, size).map(() => generateType())
-        this.freeLand = range(0, size - 1)
+
+        const delaunay = Delaunay.from(this.points)
+
+        this.points = this.points.filter(([x, y], i) => {
+            const minNeighbourDistance = Math.min(
+                ...[...delaunay.neighbors(i)]
+                    .map((neighbourIndex) => this.points[neighbourIndex])
+                    .map(([nx, ny]) => {
+                        const [vx, vy] = [-nx + x, -ny + y]
+                        const size = Math.sqrt(vx * vx + vy * vy)
+                        return size
+                    })
+            )
+
+            return minNeighbourDistance > 10
+        })
+
+        this.terrainTypes = range(1, this.points.length).map(generateType)
+        this.freeLand = range(0, this.points.length - 1)
 
         this.points.forEach(([x, y], i) => {
             if (x < 100 || y < 100 || x > 900 || y > 900) {

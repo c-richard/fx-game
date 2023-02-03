@@ -1,8 +1,8 @@
 import { Socket } from 'socket.io'
-import { OnDiff } from '../../types/types'
-import { playerToResponse } from '../mappers/playerToResponse'
-import { Room } from '../models/room'
-import { roomRepository } from '../models/repositories'
+import { OnDiff } from '../../types/types.js'
+import { playerToResponse } from '../mappers/playerToResponse.js'
+import { Room } from '../models/room.js'
+import { roomRepository } from '../models/repositories.js'
 
 export function onDisconnect(this: Socket) {
     const room = roomRepository

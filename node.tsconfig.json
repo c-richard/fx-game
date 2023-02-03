@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node"
+    "target": "ESNext",
+    "module": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["src"],
-  "references": [{ "path": "./node.tsconfig.json" }]
+  "include": ["src/server/*"]
 }

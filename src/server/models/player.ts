@@ -1,4 +1,4 @@
-import { socketRepository } from './repositories'
+import { socketRepository } from './repositories.js'
 
 export class Player {
     id: string

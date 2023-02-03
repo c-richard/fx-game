@@ -1,6 +1,6 @@
-import { RoomResponse } from '../../types/types'
-import { Room } from '../models/room'
-import { playerToResponse } from './playerToResponse'
+import { RoomResponse } from '../../types/types.js'
+import { Room } from '../models/room.js'
+import { playerToResponse } from './playerToResponse.js'
 
 export function roomToResponse(room: Room): RoomResponse {
     return {

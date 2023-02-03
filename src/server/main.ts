@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io'
-import { onCreate, onBegin, onJoin, onDisconnect } from './handlers'
-import { onConnectLand } from './handlers/onConnectLand'
-import { socketRepository } from './models/repositories'
+import { onCreate, onBegin, onJoin, onDisconnect } from './handlers/index.js'
+import { onConnectLand } from './handlers/onConnectLand.js'
+import { socketRepository } from './models/repositories.js'
 
 const io = new Server({
     cors: {
@@ -11,7 +11,6 @@ const io = new Server({
 
 io.on('connection', (socket: Socket) => {
     socketRepository.save(socket)
-
     socket.on('create', onCreate)
     socket.on('begin', onBegin)
     socket.on('join', onJoin)

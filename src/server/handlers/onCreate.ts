@@ -1,10 +1,11 @@
 import { Socket } from 'socket.io'
-import { Room } from '../models/room'
-import { roomRepository } from '../models/repositories'
 import { v4 as uuidv4 } from 'uuid'
-import { Player } from '../models/player'
-import { OnJoined } from '../../types/types'
-import { roomToResponse } from '../mappers/roomToResponse'
+
+import { Room } from '../models/room.js'
+import { roomRepository } from '../models/repositories.js'
+import { Player } from '../models/player.js'
+import { OnJoined } from '../../types/types.js'
+import { roomToResponse } from '../mappers/roomToResponse.js'
 
 export function onCreate(this: Socket, clientId: string) {
     const player = new Player(clientId, this.id)
