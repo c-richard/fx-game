@@ -1,7 +1,9 @@
-import { range } from 'rambda'
+import { clamp, range } from 'rambda'
 import { Point, TerrainType } from '../../types/types.js'
 import { Player } from './player.js'
 import { Delaunay } from 'd3-delaunay'
+import { polygonContains, polygonHull } from 'd3-polygon'
+import { Angle, Vector2 } from '@daign/math'
 
 const generateNumber = (min: number, max: number) =>
     Math.floor(Math.min(max, Math.max(min, Math.random() * 1000)))
@@ -29,8 +31,22 @@ export class GameMap {
     terrainTypes: TerrainType[] = []
 
     constructor(size: number) {
-        this.points = range(1, size).map(() => generatePoint(0, 1000))
+        // TODO make limit and size proportional so cells have a default size
+        const boundary = this.createBoundary()
 
+        this.points = []
+
+        let steps = 0
+        while (this.points.length < size) {
+            steps += 1
+            const point = generatePoint(0, 1000)
+
+            if (polygonContains(boundary, point)) {
+                this.points.push(point)
+            }
+        }
+
+        // Remove points too close together
         const delaunay = Delaunay.from(this.points)
 
         this.points = this.points.filter(([x, y], i) => {
@@ -44,17 +60,62 @@ export class GameMap {
                     })
             )
 
-            return minNeighbourDistance > 10
+            return minNeighbourDistance > 5
         })
 
         this.terrainTypes = range(1, this.points.length).map(generateType)
         this.freeLand = range(0, this.points.length - 1)
 
-        this.points.forEach(([x, y], i) => {
-            if (x < 100 || y < 100 || x > 900 || y > 900) {
+        // Mark edge cells
+        const voronoi = Delaunay.from(this.points).voronoi([0, 0, 1000, 1000])
+
+        this.points.forEach((p, i) => {
+            const cell = voronoi.cellPolygon(i)
+
+            const polygonOnEdge = cell.find(
+                (p) => polygonContains(boundary, p) === false
+            )
+
+            if (polygonOnEdge !== undefined) {
                 this.terrainTypes[i] = 'EDGE'
             }
         })
+
+        // TODO make sure map is traversable
+    }
+
+    createBoundary() {
+        const verticesCount = clamp(5, 10, Math.round(Math.random() * 10))
+        const angleIncrement = 360 / verticesCount
+
+        let dy = range(0, verticesCount).map(() => Math.random())
+
+        // Smooth
+        const getVector = (i: number) => dy[(i + dy.length) % dy.length]
+
+        dy = dy.map((_, i) => (getVector(i) + getVector(i - 1)) / 2)
+
+        // Stretch to edge
+        const maxDy = Math.max(...dy)
+        const scale = 1 / maxDy
+        dy = dy.map((y) => y * scale)
+
+        const rawPoints = range(0, verticesCount).map((_, i) => {
+            const center = new Vector2(500, 500)
+            const rotate = new Angle()
+            rotate.setDegrees(angleIncrement * i)
+
+            return new Vector2(0, dy[i])
+                .multiplyScalar(500)
+                .rotate(rotate)
+                .add(center)
+        })
+
+        const convertedPoints = rawPoints.map(
+            (p) => [Math.round(p.x), Math.round(p.y)] as Point
+        )
+
+        return polygonHull(convertedPoints) as Point[]
     }
 
     assignRandomLand(player: Player) {
