@@ -18,8 +18,6 @@ export class RoomClient {
         this.socket.on('land-connected', (response) => {
             this.connectLandListeners.forEach((listener) => listener(response))
         })
-
-        console.log('Socket is active', this.socket.active)
     }
 
     create(clientId: string) {

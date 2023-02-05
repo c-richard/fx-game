@@ -6,6 +6,7 @@ export function roomToResponse(room: Room): RoomResponse {
     return {
         id: room.id,
         points: room.map?.points,
+        boundary: room.map?.boundary,
         terrainTypes: room.map?.terrainTypes,
         stage: room.stage,
         connections: room.connections,

@@ -3,13 +3,6 @@ import { Point, TerrainType } from '../../types/types.js'
 import { Player } from './player.js'
 import { Delaunay } from 'd3-delaunay'
 import { polygonContains, polygonHull } from 'd3-polygon'
-import { Angle, Vector2 } from '@daign/math'
-
-const generateNumber = (min: number, max: number) =>
-    Math.floor(Math.min(max, Math.max(min, Math.random() * 1000)))
-
-const generatePoint = (min: number, max: number) =>
-    [generateNumber(min, max), generateNumber(min, max)] as Point
 
 const generateType = (): TerrainType => {
     if (Math.random() <= 0.3) {
@@ -26,96 +19,115 @@ const generateType = (): TerrainType => {
 export class GameMap {
     points: Point[]
     freeLand: number[]
+    boundary: [Point, Point]
     playerToLandIds: Partial<Record<string, number[]>> = {}
     landToPlayerId: Partial<Record<number, string>> = {}
     terrainTypes: TerrainType[] = []
+    size: number
 
     constructor(size: number) {
-        // TODO make limit and size proportional so cells have a default size
-        const boundary = this.createBoundary()
-
-        this.points = []
-
-        let steps = 0
-        while (this.points.length < size) {
-            steps += 1
-            const point = generatePoint(0, 1000)
-
-            if (polygonContains(boundary, point)) {
-                this.points.push(point)
-            }
-        }
-
-        // Remove points too close together
-        const delaunay = Delaunay.from(this.points)
-
-        this.points = this.points.filter(([x, y], i) => {
-            const minNeighbourDistance = Math.min(
-                ...[...delaunay.neighbors(i)]
-                    .map((neighbourIndex) => this.points[neighbourIndex])
-                    .map(([nx, ny]) => {
-                        const [vx, vy] = [-nx + x, -ny + y]
-                        const size = Math.sqrt(vx * vx + vy * vy)
-                        return size
-                    })
-            )
-
-            return minNeighbourDistance > 5
-        })
-
-        this.terrainTypes = range(1, this.points.length).map(generateType)
+        this.size = size
+        this.points = this.generatePoints()
+        this.boundary = this.getBoundary()
+        this.terrainTypes = this.getTerrainTypes()
         this.freeLand = range(0, this.points.length - 1)
 
-        // Mark edge cells
-        const voronoi = Delaunay.from(this.points).voronoi([0, 0, 1000, 1000])
+        // TODO make sure map is traversible
+    }
+
+    getTerrainTypes() {
+        const [[minX, minY], [maxX, maxY]] = this.boundary
+        const terrain = range(1, this.points.length).map(generateType)
+        const voronoi = Delaunay.from(this.points).voronoi([
+            minX,
+            minY,
+            maxX,
+            maxY,
+        ])
 
         this.points.forEach((p, i) => {
             const cell = voronoi.cellPolygon(i)
+            const isPolygonOnEdge =
+                cell.find(
+                    (p) =>
+                        polygonContains(
+                            [
+                                [minX + 1, minY + 1],
+                                [minX, maxY],
+                                [maxX, maxY],
+                                [maxX, minY],
+                            ],
+                            p
+                        ) === false
+                ) !== undefined
 
-            const polygonOnEdge = cell.find(
-                (p) => polygonContains(boundary, p) === false
-            )
-
-            if (polygonOnEdge !== undefined) {
-                this.terrainTypes[i] = 'EDGE'
+            if (isPolygonOnEdge) {
+                terrain[i] = 'EDGE'
             }
         })
 
-        // TODO make sure map is traversable
+        return terrain
     }
 
-    createBoundary() {
-        const verticesCount = clamp(5, 10, Math.round(Math.random() * 10))
-        const angleIncrement = 360 / verticesCount
+    getBoundary(): [Point, Point] {
+        const minX = Math.min(...this.points.map(([x, _]) => x))
+        const minY = Math.min(...this.points.map(([_, y]) => y))
+        const maxX = Math.max(...this.points.map(([x, _]) => x))
+        const maxY = Math.max(...this.points.map(([_, y]) => y))
 
-        let dy = range(0, verticesCount).map(() => Math.random())
+        const min: Point = [minX, minY]
+        const max: Point = [maxX, maxY]
 
-        // Smooth
-        const getVector = (i: number) => dy[(i + dy.length) % dy.length]
+        return [min, max]
+    }
 
-        dy = dy.map((_, i) => (getVector(i) + getVector(i - 1)) / 2)
+    generatePoints() {
+        let cells = range(0, this.size).map(() => ({
+            pos: [Math.random() * 2 - 1, Math.random() * 2 - 1] as Point,
+            radius: clamp(0.1, 1, Math.random()),
+        }))
 
-        // Stretch to edge
-        const maxDy = Math.max(...dy)
-        const scale = 1 / maxDy
-        dy = dy.map((y) => y * scale)
+        let collisionCount = 0
 
-        const rawPoints = range(0, verticesCount).map((_, i) => {
-            const center = new Vector2(500, 500)
-            const rotate = new Angle()
-            rotate.setDegrees(angleIncrement * i)
+        do {
+            collisionCount = 0
+            const delaunay = Delaunay.from(cells.map((c) => c.pos))
 
-            return new Vector2(0, dy[i])
-                .multiplyScalar(500)
-                .rotate(rotate)
-                .add(center)
-        })
+            cells = cells.map(({ pos: [x, y], radius }, i) => {
+                const vNeighbourToPoint = [...delaunay.neighbors(i)]
+                    .map((neighbourIndex) => cells[neighbourIndex].pos)
+                    .map(([nx, ny]) => [-nx + x, -ny + y])
+                    .filter(([nx, ny]) => Math.abs(nx) + Math.abs(ny) < radius)
 
-        const convertedPoints = rawPoints.map(
-            (p) => [Math.round(p.x), Math.round(p.y)] as Point
+                if (vNeighbourToPoint.length === 0) {
+                    return { pos: [x, y], radius }
+                } else {
+                    collisionCount += vNeighbourToPoint.length
+
+                    const [sumX, sumY] = vNeighbourToPoint.reduce(
+                        ([ax, ay], [dx, dy]) => [ax + dx, ay + dy],
+                        [0, 0]
+                    )
+
+                    const [rx, ry] = [
+                        (Math.random() * 2 - 1) * 0.1,
+                        (Math.random() * 2 - 1) * 0.1,
+                    ]
+
+                    const [ax, ay] = [
+                        sumX / vNeighbourToPoint.length,
+                        sumY / vNeighbourToPoint.length,
+                    ]
+
+                    return { pos: [x + ax + rx, y + ay + ry], radius }
+                }
+            })
+        } while (collisionCount > 0)
+
+        return cells.map(
+            ({ pos: [x, y] }) =>
+                [Math.round(x * 125), Math.round(y * 125)] as Point
         )
-
-        return polygonHull(convertedPoints) as Point[]
     }
 
     assignRandomLand(player: Player) {

@@ -26,12 +26,19 @@ export class CustomGame extends Engine {
     }
 
     private generateMap(room: RoomResponse) {
-        if (room.points == undefined || room.terrainTypes == undefined) {
+        if (
+            room.points == undefined ||
+            room.terrainTypes == undefined ||
+            room.boundary == undefined
+        ) {
             throw new Error('Room is not in play')
         }
 
         const delaunay = Delaunay.from(room.points)
-        const voronoi = delaunay.voronoi([0, 0, 1000, 1000])
+        const voronoi = delaunay.voronoi([
+            ...room.boundary[0],
+            ...room.boundary[1],
+        ])
 
         // Create cells
         room.points.forEach((point, i) =>
@@ -287,16 +294,6 @@ export class CustomGame extends Engine {
 
                 this.currentScene.camera.pos =
                     this.currentScene.camera.pos.add(startToEndWorld)
-
-                this.currentScene.camera.pos.x = Math.min(
-                    1000,
-                    Math.max(0, this.currentScene.camera.pos.x)
-                )
-
-                this.currentScene.camera.pos.y = Math.min(
-                    1000,
-                    Math.max(0, this.currentScene.camera.pos.y)
-                )
 
                 return
             }

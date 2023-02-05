@@ -19,6 +19,7 @@ export interface RoomResponse {
     id: string
     host: PlayerResponse
     points?: Point[]
+    boundary?: [Point, Point]
     terrainTypes?: TerrainType[]
     connections: Connection[]
     stage: 'LOBBY' | 'PLAY' | 'ENDED'

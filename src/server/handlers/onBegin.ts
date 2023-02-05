@@ -25,6 +25,7 @@ function onBeginResponse(room: Room): OnDiff {
         room: {
             stage: 'PLAY',
             points: room.map?.points,
+            boundary: room.map?.boundary,
             terrainTypes: room.map?.terrainTypes,
             host: playerToResponse(room.host, room?.map),
             players: room.players.map((p) => playerToResponse(p, room?.map)),
