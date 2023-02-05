@@ -1,4 +1,4 @@
-import { clamp, range } from 'rambda'
+import { mean, range, sum } from 'rambda'
 import { Point, TerrainType } from '../../types/types.js'
 import { Player } from './player.js'
 import { Delaunay } from 'd3-delaunay'
@@ -82,51 +82,46 @@ export class GameMap {
     }
 
     generatePoints() {
-        let cells = range(0, this.size).map(() => ({
-            pos: [Math.random() * 2 - 1, Math.random() * 2 - 1] as Point,
-            radius: clamp(0.1, 1, Math.random()),
-        }))
+        const radiuses = range(0, this.size).map(
+            () => Math.random() * 0.9 + 0.2
+        )
+
+        const expectedBoundaryDiamter = Math.sqrt(sum(radiuses))
+
+        let points: Point[] = range(0, this.size).map((_, i) => [
+            Math.random() * expectedBoundaryDiamter,
+            Math.random() * expectedBoundaryDiamter,
+        ])
 
         let collisionCount = 0
 
         do {
             collisionCount = 0
-            const delaunay = Delaunay.from(cells.map((c) => c.pos))
+            const delaunay = Delaunay.from(points)
 
-            cells = cells.map(({ pos: [x, y], radius }, i) => {
+            points = points.map(([x, y], i) => {
                 const vNeighbourToPoint = [...delaunay.neighbors(i)]
-                    .map((neighbourIndex) => cells[neighbourIndex].pos)
+                    .map((neighbourIndex) => points[neighbourIndex])
                     .map(([nx, ny]) => [-nx + x, -ny + y])
-                    .filter(([nx, ny]) => Math.abs(nx) + Math.abs(ny) < radius)
-
-                if (vNeighbourToPoint.length === 0) {
-                    return { pos: [x, y], radius }
-                } else {
-                    collisionCount += vNeighbourToPoint.length
-
-                    const [sumX, sumY] = vNeighbourToPoint.reduce(
-                        ([ax, ay], [dx, dy]) => [ax + dx, ay + dy],
-                        [0, 0]
+                    .filter(
+                        ([nx, ny]) => Math.abs(nx) + Math.abs(ny) < radiuses[i]
                     )
 
-                    const [rx, ry] = [
-                        (Math.random() * 2 - 1) * 0.1,
-                        (Math.random() * 2 - 1) * 0.1,
-                    ]
+                if (vNeighbourToPoint.length > 0) {
+                    collisionCount += vNeighbourToPoint.length
 
-                    const [ax, ay] = [
-                        sumX / vNeighbourToPoint.length,
-                        sumY / vNeighbourToPoint.length,
-                    ]
+                    const ax = mean(vNeighbourToPoint.map(([x, _]) => x))
+                    const ay = mean(vNeighbourToPoint.map(([_, y]) => y))
 
-                    return { pos: [x + ax + rx, y + ay + ry], radius }
+                    return [x + ax, y + ay]
                 }
+
+                return [x, y]
             })
         } while (collisionCount > 0)
 
-        return cells.map(
-            ({ pos: [x, y] }) =>
-                [Math.round(x * 125), Math.round(y * 125)] as Point
+        return points.map(
+            ([x, y]) => [Math.round(x * 250), Math.round(y * 250)] as Point
         )
     }
 

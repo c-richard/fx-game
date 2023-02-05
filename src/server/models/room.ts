@@ -39,7 +39,7 @@ export class Room {
 
     startGame() {
         this.stage = 'PLAY'
-        this.map = new GameMap(64)
+        this.map = new GameMap(256)
         this.players.forEach((p) => {
             this.map?.assignRandomLand(p)
         })
