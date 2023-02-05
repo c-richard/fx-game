@@ -35,10 +35,7 @@ export class CustomGame extends Engine {
         }
 
         const delaunay = Delaunay.from(room.points)
-        const voronoi = delaunay.voronoi([
-            ...room.boundary[0],
-            ...room.boundary[1],
-        ])
+        const voronoi = delaunay.voronoi(room.boundary)
 
         // Create cells
         room.points.forEach((point, i) =>

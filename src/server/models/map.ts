@@ -19,15 +19,26 @@ const generateType = (): TerrainType => {
 export class GameMap {
     points: Point[]
     freeLand: number[]
-    boundary: [Point, Point]
+    boundary: [number, number, number, number]
     playerToLandIds: Partial<Record<string, number[]>> = {}
     landToPlayerId: Partial<Record<number, string>> = {}
     terrainTypes: TerrainType[] = []
     size: number
 
-    constructor(size: number) {
+    constructor({
+        size = 64,
+        minSize = 20,
+        maxSize = 200,
+    }: {
+        size?: number
+        minSize?: number
+        maxSize?: number
+    }) {
         this.size = size
-        this.points = this.generatePoints()
+        this.points = this.generatePoints({
+            minSize,
+            maxSize,
+        })
         this.boundary = this.getBoundary()
         this.terrainTypes = this.getTerrainTypes()
         this.freeLand = range(0, this.points.length - 1)
@@ -36,14 +47,9 @@ export class GameMap {
     }
 
     getTerrainTypes() {
-        const [[minX, minY], [maxX, maxY]] = this.boundary
+        const [minX, minY, maxX, maxY] = this.boundary
         const terrain = range(1, this.points.length).map(generateType)
-        const voronoi = Delaunay.from(this.points).voronoi([
-            minX,
-            minY,
-            maxX,
-            maxY,
-        ])
+        const voronoi = Delaunay.from(this.points).voronoi(this.boundary)
 
         this.points.forEach((p, i) => {
             const cell = voronoi.cellPolygon(i)
@@ -69,21 +75,18 @@ export class GameMap {
         return terrain
     }
 
-    getBoundary(): [Point, Point] {
+    getBoundary(): [number, number, number, number] {
         const minX = Math.min(...this.points.map(([x, _]) => x))
         const minY = Math.min(...this.points.map(([_, y]) => y))
         const maxX = Math.max(...this.points.map(([x, _]) => x))
         const maxY = Math.max(...this.points.map(([_, y]) => y))
 
-        const min: Point = [minX, minY]
-        const max: Point = [maxX, maxY]
-
-        return [min, max]
+        return [minX, minY, maxX, maxY]
     }
 
-    generatePoints() {
+    generatePoints({ minSize, maxSize }: { minSize: number; maxSize: number }) {
         const radiuses = range(0, this.size).map(
-            () => Math.random() * 0.9 + 0.2
+            () => Math.random() * (maxSize - minSize) + minSize
         )
 
         const expectedBoundaryDiamter = Math.sqrt(sum(radiuses))
@@ -110,19 +113,17 @@ export class GameMap {
                 if (vNeighbourToPoint.length > 0) {
                     collisionCount += vNeighbourToPoint.length
 
-                    const ax = mean(vNeighbourToPoint.map(([x, _]) => x))
-                    const ay = mean(vNeighbourToPoint.map(([_, y]) => y))
-
-                    return [x + ax, y + ay]
+                    return [
+                        x + mean(vNeighbourToPoint.map(([x, _]) => x)),
+                        y + mean(vNeighbourToPoint.map(([_, y]) => y)),
+                    ]
                 }
 
                 return [x, y]
             })
         } while (collisionCount > 0)
 
-        return points.map(
-            ([x, y]) => [Math.round(x * 250), Math.round(y * 250)] as Point
-        )
+        return points
     }
 
     assignRandomLand(player: Player) {
