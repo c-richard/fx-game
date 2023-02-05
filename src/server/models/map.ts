@@ -2,19 +2,7 @@ import { mean, range, sum } from 'rambda'
 import { Point, TerrainType } from '../../types/types.js'
 import { Player } from './player.js'
 import { Delaunay } from 'd3-delaunay'
-import { polygonContains, polygonHull } from 'd3-polygon'
-
-const generateType = (): TerrainType => {
-    if (Math.random() <= 0.3) {
-        return 'PLANETS' as const
-    }
-
-    if (Math.random() <= 0.9) {
-        return 'SPACE' as const
-    }
-
-    return 'BLACK_HOLE' as const
-}
+import { polygonContains } from 'd3-polygon'
 
 export class GameMap {
     points: Point[]
@@ -27,10 +15,14 @@ export class GameMap {
 
     constructor({
         size = 64,
+        blackholeChance = 0.2,
+        planetChance = 0.4,
         minSize = 20,
         maxSize = 200,
     }: {
         size?: number
+        blackholeChance?: number
+        planetChance?: number
         minSize?: number
         maxSize?: number
     }) {
@@ -40,18 +32,40 @@ export class GameMap {
             maxSize,
         })
         this.boundary = this.getBoundary()
-        this.terrainTypes = this.getTerrainTypes()
+        this.terrainTypes = this.getTerrainTypes({
+            blackholeChance,
+            planetChance,
+        })
         this.freeLand = range(0, this.points.length - 1)
-
-        // TODO make sure map is traversible
     }
 
-    getTerrainTypes() {
+    getTerrainTypes({
+        blackholeChance,
+        planetChance,
+    }: {
+        blackholeChance: number
+        planetChance: number
+    }) {
+        // Generate terrain
+        const terrain: TerrainType[] = range(1, this.points.length).map(() => {
+            const r = Math.random()
+
+            if (r < blackholeChance) {
+                return 'BLACK_HOLE' as const
+            }
+
+            if (r < blackholeChance + planetChance) {
+                return 'PLANETS' as const
+            }
+
+            return 'SPACE' as const
+        })
+
+        // Mark edges
         const [minX, minY, maxX, maxY] = this.boundary
-        const terrain = range(1, this.points.length).map(generateType)
         const voronoi = Delaunay.from(this.points).voronoi(this.boundary)
 
-        this.points.forEach((p, i) => {
+        this.points.forEach((_, i) => {
             const cell = voronoi.cellPolygon(i)
             const isPolygonOnEdge =
                 cell.find(
