@@ -111,9 +111,12 @@ export class GameMap {
         ])
 
         let collisionCount = 0
+        let steps = 0
 
         do {
             collisionCount = 0
+            steps += 1
+
             const delaunay = Delaunay.from(points)
 
             points = points.map(([x, y], i) => {
@@ -135,7 +138,19 @@ export class GameMap {
 
                 return [x, y]
             })
-        } while (collisionCount > 0)
+        } while (collisionCount > 0 && steps < 10000)
+
+        // Remove cells that are still too close
+        const delaunay = Delaunay.from(points)
+
+        points = points.filter(([x, y], i) => {
+            const vNeighbourToPoint = [...delaunay.neighbors(i)]
+                .map((neighbourIndex) => points[neighbourIndex])
+                .map(([nx, ny]) => [-nx + x, -ny + y])
+                .filter(([nx, ny]) => Math.abs(nx) + Math.abs(ny) < radiuses[i])
+
+            return vNeighbourToPoint.length === 0
+        })
 
         return points
     }
